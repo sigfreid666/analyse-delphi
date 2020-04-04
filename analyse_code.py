@@ -17,7 +17,7 @@ logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s :: %(levelname)s :: %(message)s')
 # création d'un handler qui va rediriger une écriture du log vers
 # un fichier en mode 'append', avec 1 backup et une taille max de 1Mo
-file_handler = RotatingFileHandler('analyse_code.log', 'a', 1000000, 1, encoding='utf-8-sig')
+file_handler = RotatingFileHandler('analyse_code.log', 'a', 10000000, 1, encoding='utf-8-sig')
 # on lui met le niveau sur DEBUG, on lui dit qu'il doit utiliser le formateur
 # créé précédement et on ajoute ce handler au logger
 file_handler.setLevel(logging.DEBUG)
@@ -66,6 +66,7 @@ class gestion_multiligne:
             self.lignes = lignes
         for ligne in lignes:
             ligne_mod = re.sub(r'\(\*.*\*\)', ' ', ligne)
+            ligne_mod = re.sub(r'\{.*?\}', ' ', ligne_mod)
             ligne_mod = ligne_mod.replace('{$REGION}', ' ')
             ligne_mod = ligne_mod.replace('{$ENDREGION}', ' ')
             pos_commentaire = ligne_mod.find('//')
@@ -78,7 +79,6 @@ class gestion_multiligne:
             self.index_reel.append(index_courant_reel)
             index_courant += len(ligne_mod)
             index_courant_reel += len(ligne)
-        self.data = re.sub(r'\{\.*?\}', ' ', self.data)
         # logger.debug('data <%s>', self.data)
     def num_ligne(self, indice):
         for pos in self.index:
@@ -168,8 +168,10 @@ class cUses:
     def __init__(self, data_uses):
         self.list_uses = [x.strip() for x in data_uses.split(',')]
         logger.info('%d uses trouves', len(self.list_uses))
+
     def __repr__(self):
         return 'USES nb <%d>' % (len(self.list_uses))
+
     def analyse_uses(self, ensemble_unite, tabulation):
         logger.info('analyse_uses : <%d>', len(self.list_uses))
         rangement = [
@@ -357,11 +359,17 @@ class cClasse(cType):
 
 class unite():
     def __init__(self, nom_fichier):
-        self.data = None
+        self.data = ''
         self.gestion_ml = None
         self.nom_fichier = Path(nom_fichier)
         self.nom = ''
-        self.pos_unite = None
+        with codecs.open(str(nom_fichier), 'r', encoding='utf-8-sig') as f:
+            lignes = f.readlines()
+            self.gestion_ml = gestion_multiligne(lignes)
+            self.data = cData(self.gestion_ml)
+
+        logger.info('Analyse du fichier <%s>', str(self.nom_fichier))
+        self.pos_unite = self._find_unit()
         self.nom = self.pos_unite[3][0]
         self.liste_classe = []
         self.liste_section_interface = []
@@ -371,35 +379,23 @@ class unite():
         self.symbols = cTableSymbol()
         self.uses_inter_pos = self.uses_interface = None
         self.uses_impl_pos = self.uses_implementation = None
-        self.interface_pos = None
-        self.implementation_pos = None
-        self.end_final_pos = None
-
-    def analyse_fichier(self):
-        with codecs.open(str(nom_fichier), 'r', encoding='utf-8-sig') as f:
-            lignes = f.readlines()
-            self.gestion_ml = gestion_multiligne(lignes)
-            self.data = cData(self.gestion_ml)
-
-            logger.info('Analyse du fichier <%s>', str(self.nom_fichier))
-            self.pos_unite = self._find_unit()
-            self.nom = self.pos_unite[3][0]
-            self.interface_pos = self._find_interface()
-            if self.interface_pos is None:
-                logger.error('impossible de trouver la section interface')
-            self.implementation_pos = self._find_implementation()
-            if self.implementation_pos is None:
-                logger.error('impossible de trouver la section implementation')
-            self.end_final_pos = self._find_endfinal()
-            if self.end_final_pos is None:
-                logger.error('impossible de trouver le end final')
-            if (self.interface_pos is not None) and (self.implementation_pos is not None):
-                self.uses_inter_pos = self._find_uses(self.interface_pos[1], self.implementation_pos[0])
-                self.uses_impl_pos = self._find_uses(self.implementation_pos[1], self.end_final_pos[0])
-                if self.uses_inter_pos is not None:
-                    self.uses_interface = cUses(self.uses_inter_pos[3][0])
-                if self.uses_impl_pos is not None:
-                    self.uses_implementation = cUses(self.uses_impl_pos[3][0])
+        self.liste_unite = []
+        self.interface_pos = self._find_interface()
+        if self.interface_pos is None:
+            logger.error('impossible de trouver la section interface')
+        self.implementation_pos = self._find_implementation()
+        if self.implementation_pos is None:
+            logger.error('impossible de trouver la section implementation')
+        self.end_final_pos = self._find_endfinal()
+        if self.end_final_pos is None:
+            logger.error('impossible de trouver le end final')
+        if (self.interface_pos is not None) and (self.implementation_pos is not None):
+            self.uses_inter_pos = self._find_uses(self.interface_pos[1], self.implementation_pos[0])
+            self.uses_impl_pos = self._find_uses(self.implementation_pos[1], self.end_final_pos[0])
+            if self.uses_inter_pos is not None:
+                self.uses_interface = cUses(self.uses_inter_pos[3][0])
+            if self.uses_impl_pos is not None:
+                self.uses_implementation = cUses(self.uses_impl_pos[3][0])
 
     def analyse_type_interface(self):
         self.type_interface_pos, self.liste_type_interface = self._analyse_type(self.interface_pos[1], self.implementation_pos[0])
@@ -485,7 +481,7 @@ class unite():
                     
 
     def __str__(self):
-        chaine = 'UNITE <%s> <%s>\n' % (self.nom, str(self.nom_fichier))
+        chaine = 'UNITE <%s> <%s> utilise par <%d>\n' % (self.nom, str(self.nom_fichier), len(self.liste_unite))
         chaine += '\tINTERFACE Ligne : %d\n' % self.gestion_ml.num_ligne(self.interface_pos[0])
         if self.uses_interface is not None:
             chaine += '\t\t' + str(self.uses_interface) + '\n'
@@ -678,22 +674,34 @@ class unite():
 
 
 class cEnsembleUnite:
-    def __init__(self, repertoire):
+    def __init__(self, repertoire, cache_unite=True):
         self.repertoire = repertoire
         self.nom_dpr = ''
         self.nom_fichier_dpr = ''
         self.unites = {}
+
+        self.nom_fichier = Path(repertoire) / Path('unite.pickle')
+        if cache_unite:
+            if self.nom_fichier.exists():
+                with open(str(self.nom_fichier), 'rb') as f:
+                    self.unites = pickle.load(f)
+
+    def save(self):
+        logger.info('sauvegarde : <%d> unite(s)', len(self.unites))
+        with self.nom_fichier.open(mode='wb') as f:
+            pickle.dump(self.unites, f)
+
 
     def analyser_repertoire(self):
         logger.info('ensemble unite : %s', self.repertoire)
         def parcour(p_repertoire):
             for x in Path(p_repertoire).iterdir():
                 if (not x.is_dir()) and x.match('*.pas'):
-                    self.unites[str(x)] = None
+                    self.unites[str(x)] = unite(str(x))
                     logger.debug('trouver : %s dans %s', x.name, p_repertoire)
                 elif x.is_dir() and (not x.name.startswith('.')):
                     parcour(x)
-        parcour(repertoire)
+        parcour(self.repertoire)
 
     def analyser(self, avec_type_interface=False):
         for un in self.unites:
@@ -702,7 +710,7 @@ class cEnsembleUnite:
                 self.unites[un].analyse_type_interface()
             break
 
-    def lire_dpr(self, nom_fichier_dpr):
+    def lire_dpr(self, nom_fichier_dpr, recharger=False):
         self.nom_fichier_dpr = nom_fichier_dpr
         with open(str(Path(self.repertoire) / Path(nom_fichier_dpr)), 'r') as f:
             logger.info('Ouverture du fichier dpr <%s>', nom_fichier_dpr)
@@ -721,13 +729,56 @@ class cEnsembleUnite:
                 unit_trouve = 0
                 for unit_pos in re.finditer(r'([\.\w]+)\s+IN\s+\'([\\\/\:\.\w]+)\'\s*(?:\{.*?\})?\s*(?:,|;)', data[uses_pos.end(0):], re.IGNORECASE):
                     try:
-                        self.unites[unit_pos.groups()[0]] = unite(unit_pos.groups()[1])
+                        if recharger or (unit_pos.groups()[0].upper() not in self.unites):
+                            self.unites[unit_pos.groups()[0].upper()] = unite(unit_pos.groups()[1])
                         logger.debug('unite trouve <%s> <%s>', unit_pos.groups()[0], unit_pos.groups()[1])
                         unit_trouve += 1
+                    except FileNotFoundError:
+                        logger.error('le fichier <%s> n''existe pas', unit_pos.groups()[0])
                     except Exception as e:
-                        logger.error('impossibe d''analyser l''unite <%s>', self.unit_pos.groups()[0])
+                        logger.error('impossibe d''analyser l''unite <%s>', unit_pos.groups()[0])
                         raise e
                 logger.info('Nombre de unit trouve : <%d>', unit_trouve)
+
+    def check_uses(self):
+        for unite in self.unites:
+            if self.unites[unite].uses_interface is not None:
+                for uses in self.unites[unite].uses_interface.list_uses:
+                    if uses not in self.unites:
+                        logger.error('impossible de trouve <%s> dans <%s>', uses, unite)
+            if self.unites[unite].uses_implementation is not None:
+                for uses in self.unites[unite].uses_implementation.list_uses:
+                    if uses not in self.unites:
+                        logger.error('impossible de trouve <%s> dans <%s>', uses, unite)
+
+    def check_uses_non_utilise(self):
+        stat = list(self.unites.keys())
+        for unite in self.unites:
+            logger.debug('unite %s', unite)
+            # if unite not in stat:
+            #     continue
+            logger.debug('on continue')
+            if self.unites[unite].uses_interface is not None:
+                for uses in self.unites[unite].uses_interface.list_uses:
+                    logger.debug('verif uses interface %s', uses)
+                    if (uses.upper() in self.unites) and (uses.upper() in stat):
+                        stat.remove(uses.upper())
+                        if unite not in self.unites[uses.upper()].liste_unite:
+                            self.unites[uses.upper()].liste_unite.append(unite)
+                        logger.debug('remove %s', uses)
+                    elif uses.upper() not in self.unites:
+                        logger.error('uses <%s> non trouve dans les unites dans le fichier <%s>', uses, unite)
+            if self.unites[unite].uses_implementation is not None:
+                for uses in self.unites[unite].uses_implementation.list_uses:
+                    logger.debug('verif uses implementation %s', uses)
+                    if (uses.upper() in self.unites) and (uses.upper() in stat):
+                        logger.debug('remove %s', uses)
+                        stat.remove(uses.upper())
+                        if unite not in self.unites[uses.upper()].liste_unite:
+                            self.unites[uses.upper()].liste_unite.append(unite)
+                    elif uses.upper() not in self.unites:
+                        logger.error('uses <%s> non trouve dans les unites dans le fichier <%s>', uses, unite)
+        logger.info('check_uses_non_utilise : <%d> trouves, <%s>', len(stat), str(stat))
 
     def __str__(self):
         chaine = 'rep <%s> nombre unite <%d>' % (self.repertoire, len(self.unites))
@@ -746,26 +797,32 @@ if __name__ == "__main__":
     # print(un)
 
     ensemble = None
-    if Path('ensemble.pickle').exists():
-        with open('ensemble.pickle', 'rb') as f:
-            ensemble = pickle.load(f)
-    else:
-        # ensemble = cEnsembleUnite('/home/sigfreids/code_delphi')
-        ensemble = cEnsembleUnite('C:\\Projets\\Produits\\DEV')
-        ensemble.lire_dpr('Scolys\\_Delphi\\_ClientsServeurs\\EdT\\_Clients\\_ClientGraphique\\_Monoposte\\MonoposteEdT.dpr')
-        with open('ensemble.pickle', 'wb') as f:
-            pickle.dump(ensemble, f)
+    ensemble = cEnsembleUnite('C:\\Projets\\Produits\\DEV')
+    ensemble.lire_dpr('Scolys\\_Delphi\\_ClientsServeurs\\EdT\\_Clients\\_ClientGraphique\\_Monoposte\\MonoposteEdT.dpr')
+
+    ensemble.check_uses_non_utilise()
+    print(codecs.encode(str(ensemble.unites['NetBaseSco'.upper()]), encoding='iso8859', errors='ignore'))
 
     # ensemble = cEnsembleUnite('/home/sigfreids/code_delphi')
     # ensemble.analyser(avec_type_interface=True)
     # print(ensemble)
     # print(ensemble.unites['FicheSco_AssisstantHoraireAffiche'].uses_interface.analyse_uses(ensemble, ''))
-    # un = unite('C:\\Projets\\Produits\\DEV\\Scolys\\_Delphi\\_ClientsServeurs\\FicheSco_AssisstantHoraireAffiche.pas')
-    un = unite('/home/sigfreids/code_delphi/EditSco_Cours.pas')
-    # un.analyse_type_interface()
-    print(un)
 
-    print(un.uses_interface.analyse_uses(ensemble, ''))
+    # for nom_unite in ensemble.unites:
+    #     match = re.finditer(r'\.Masquer\s*\(?\s*\)?\s*;', ensemble.unites[nom_unite].data.data, re.IGNORECASE)
+    #     taille = [ensemble.unites[nom_unite].data.num_ligne(x.start(0)) for x in match]
+    #     if len(taille) > 0:
+    #         taille_detaille = []
+    #         for x in re.finditer(r'FINALLY.*?(Masquer\s*\(?\s*\)?\s*;).*?END', ensemble.unites[nom_unite].data.data, re.IGNORECASE):
+    #             taille_detaille.append(ensemble.unites[nom_unite].data.num_ligne(x.start(1)))
+    #         if len(taille) > len(taille_detaille):
+    #             print('\tTrouve dans %s <%s>' % (nom_unite, str([x for x in taille if x not in taille_detaille])))
+
+    ensemble.save()
+    # un = unite('C:\\Projets\\Produits\\DEV\\Scolys\\_Delphi\\_ClientsServeurs\\FicheSco_AssisstantHoraireAffiche.pas')
+    # un = unite('/home/sigfreids/code_delphi/EditSco_Cours.pas')
+    # un.analyse_type_interface()
+    # print(un)
 # with open('Q:\\test.pas', 'w') as f:
 #     entire_file = ''
 #     with open('C:\\Projets\\Produits\\DEV\\Scolys\\_Delphi\\_ClientsServeurs\\Database\\Requetes\\Requetes_CoursDEleve.pas', 'r') as unite_file:
