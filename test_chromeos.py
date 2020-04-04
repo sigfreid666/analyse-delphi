@@ -1,4 +1,5 @@
 import analyse_code
 
-analyse_code.cUses('blabla')
+retour = analyse_code.unite('./FrameSco_CoursNonAssures.pas')
 print('ca marche')
+print(retour)

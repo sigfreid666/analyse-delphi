@@ -1,4 +1,7 @@
+import re
+
 from . import gestion_multiligne
+from .log import logger
 
 class cData:
     def __init__(self, ogestionmultiligne, start_point=0, end_point=-1):

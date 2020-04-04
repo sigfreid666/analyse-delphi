@@ -1,3 +1,5 @@
+import re
+
 class gestion_multiligne:
     def __init__(self, lignes, mode_modification=False):
         self.index = []
