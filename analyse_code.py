@@ -701,7 +701,7 @@ class cEnsembleUnite:
                     logger.debug('trouver : %s dans %s', x.name, p_repertoire)
                 elif x.is_dir() and (not x.name.startswith('.')):
                     parcour(x)
-        parcour(repertoire)
+        parcour(self.repertoire)
 
     def analyser(self, avec_type_interface=False):
         for un in self.unites:
