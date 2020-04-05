@@ -70,6 +70,78 @@ class cTableSymbol:
             resultat += '\n'
         return resultat
 
+class cFonctionImpl:
+    def __init__(self, nom, info_utilitaire):
+        super().__init__(*info_utilitaire)
+        self.nom = nom
+        self.pos_var = 0
+        self.pos_first_begin = 0
+        self.pos_last_end = 0
+        self.fct_local = []
+        logger.debug('Implementation fonction analyse : %s', self.data[:50])
+        liste_begin_end = [(res_end_inter.groups()[0], res_end_inter.start(0)) for res_end_inter in re.finditer('(FUNCTION|TRY|CASE|PROCEDURE|VAR|BEGIN|END|TYPE)+', self.data)]
+        self._analyse_begin_end(liste_begin_end)
+                   
+    def __repr__(self):
+        return '<%s,%d,%d,%d,%d>' % (self.nom, self.pos_var, self.pos_first_begin, self.pos_last_end, len(self.fct_local))
+
+    def __str__(self):
+        return 'FCT IMPL <%s> repr <%s> ligne debut <%d> ligne fin <%d>' % (self.nom, self.__repr__(), self.num_ligne(0), self.num_ligne(len(self.data)))
+
+    def _analyse_begin_end(self, liste_terme):
+        logger.debug('analyse begin end : %d terme(s)', len(liste_terme))
+        nb_begin_end = 0
+        self.pos_first_begin = liste_terme[-1][1]
+        self.pos_last_end = liste_terme[-1][1]
+        self.pos_var = 0
+        position = 0
+        while position < len(liste_terme):
+            element = liste_terme[position]
+            if (element[0] == 'BEGIN') or (element[0] == 'TRY') or (element[0] == 'CASE'):
+                self.pos_first_begin = min(self.pos_first_begin, element[1])
+                nb_begin_end += 1
+            if element[0] == 'END':
+                nb_begin_end -= 1
+                if nb_begin_end == 0:
+                    self.pos_last_end = element[1]
+                    logger.debug('fin analyse : premier begin %d dernier end %d pos var %d', self.pos_first_begin, self.pos_last_end, self.pos_var)
+                    return (position, self.pos_first_begin, self.pos_last_end, self.pos_var)
+            if (element[0] == 'PROCEDURE') or (element[0] == 'FUNCTION'):
+                self.fct_local.append(self._analyse_begin_end(liste_terme[position + 1:]))
+                position = self.fct_local[-1][0] + position
+            if element[0] == 'VAR':
+                self.pos_var = element[1]
+            position += 1
+        logger.debug('fin analyse : premier begin %d dernier end %d pos var %d', self.pos_first_begin, self.pos_last_end, self.pos_var)
+        return (position, self.pos_first_begin, self.pos_last_end, self.pos_var)
+
+class cFonction:
+    def __init__(self, nom, params, info_utilitaire):
+        super().__init__(*info_utilitaire)
+        self.nom = nom
+        self.params = params
+        self.offset_decl_deb = info_utilitaire[2]
+        self.offset_decl_fin = info_utilitaire[3]
+        self.parametres = []
+        self.offset_impl_deb = 0
+        self.offset_impl_fin = 0
+        self.implementation = None
+
+        # analyse des parametres
+        # logger.debug('analyse des parametres')
+        # for param1 in self.params.split(';'):
+        #     logger.debug('param')
+
+    def __repr__(self):
+        return '<%s,%d,%d>' % (self.nom, self.offset_decl_deb, self.offset_decl_fin)
+
+    def __str__(self):
+        chaine = 'FCT <%s> params <%d> offset <%d> <%d> ligne <%d>' % (self.nom, len(self.params), self.offset_decl_deb, self.offset_decl_fin, self.num_ligne(0))
+        if self.implementation is not None:
+            chaine += '\n\t' + str(self.implementation)
+        return chaine
+
+
 class cClasse(cType):
     def __init__(self, nom, derivee, p_oData):
         super().__init__(nom, '', p_oData, p_type=cType.T_CLASS)
