@@ -221,7 +221,6 @@ class unite():
         return self.data._find_regex(C_RE_DECL_TYPE, start_point, end_point)
 
     def _analyse_section_type(self, start_point, end_point):
-        resultat = { 'class': [], 'record': [], 'type': [], 'setof': [], 'type_procedure': [], 'finsection': end_point}
         resultat = cEnsembleType(self.data.genere_fils(start_point, end_point))
         current_pos = start_point
         logger.debug('analyse type : %s', self.data.data[current_pos:current_pos+30])
@@ -237,10 +236,14 @@ class unite():
             if (class_pos is not None) and (class_pos[0] == current_pos):
                 logger.info('classe trouve : %s', str(class_pos))
                 current_pos = class_pos[1] + 1
-                if class_pos[4][1] == 'CLASS':
+                if class_pos[4][1].upper() == 'CLASS':
                     resultat.ajouter(cClasse(class_pos[4][0], class_pos[4][2], self.data.genere_fils(class_pos[0], class_pos[1])))
+                elif class_pos[4][1].upper() == 'RECORD':
+                    resultat.ajouter(cType(class_pos[4][0], '', self.data.genere_fils(class_pos[0], class_pos[1]), p_type=cType.T_RECORD))
+                elif class_pos[4][1].upper() == 'INTERFACE':
+                    resultat.ajouter(cType(class_pos[4][0], '', self.data.genere_fils(class_pos[0], class_pos[1]), p_type=cType.T_INTERFACE))
                 else:
-                    resultat.ajouter(cType(class_pos[4][0], '', self.data.genere_fils(class_pos[0], class_pos[1]), p_type=class_pos[4][1]))
+                    resultat.ajouter(cType(class_pos[4][0], '', self.data.genere_fils(class_pos[0], class_pos[1])))
                 # resultat['class'].append(class_pos) 
             else:
                 typefunc_pos = self._find_type_proc_func(current_pos, end_point)
