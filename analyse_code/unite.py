@@ -58,6 +58,7 @@ class unite():
             fin = pos[0]
             pos_function = self._find_function(debut, fin)
             while pos_function is not None:
+                self.symbols.ajouter(pos_function[3][0], cType('function', '', None), self.data.genere_fils(pos_function[0], pos_function[1]))
                 logger.debug('analyse_type_interface : fonction trouve %s', str(pos_function))
                 pos_function = self._find_function(pos_function[1], fin)
             debut = pos[1]
@@ -135,7 +136,7 @@ class unite():
             if match_obj_proc[0] < match_obj[0]:
                 match_obj = match_obj_proc
         if match_obj is not None:
-            logger.debug('resultat detection function/procedure : %s', str(match_obj[3]))
+            logger.debug('resultat detection function/procedure %s : %s', verb, str(match_obj[3]))
             group_match = match_obj[3]
             if len(match_obj[3]) == 4:
                 match_obj_param = re.finditer(C_RE_PARAM, group_match[1])
@@ -146,6 +147,8 @@ class unite():
                     for param in liste_param.split(','):
                         liste_group.append((match_iter.groups()[0], param.strip(), match_iter.groups()[2]))
                 group_match = (group_match[0], liste_group, group_match[2])
+            elif len(match_obj[3]) == 2:
+                group_match = (group_match[0], [], group_match[1], None)
             else:
                 group_match = (group_match[0], [], group_match[1], group_match[2])
             return (match_obj[0], match_obj[1], match_obj[2], group_match, verb)
