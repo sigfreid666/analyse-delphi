@@ -9,5 +9,5 @@ def unit3():
 
 def test_func(unit3):
     assert unit3 is not None
-    assert [x for x in unit3.symbols.symbol.keys()] == ['Proc1', 'Proc2', 'Proc3', 'Proc4', 'Proc5', 'Proc6', 'Proc7', 'Proc8' ]
+    assert sorted([x for x in unit3.symbols.symbol.keys()]) == ['Proc1', 'Proc2', 'Proc3', 'Proc4', 'Proc5', 'Proc6', 'Proc7', 'Proc8' ]
     assert len(unit3.symbols.symbol['Proc8']) == 2
