@@ -113,28 +113,28 @@ class unite():
         match_obj = None
         verb = 'function'
         liste_group = [ ]
-        if impl == '':
-            match_obj = self.data._find_regex(C_RE_FUNCTION_DECL_S, start_point, end_point)
-            if match_obj is None:
-                match_obj = self.data._find_regex(C_RE_FUNCTION_DECL, start_point, end_point)
-            match_obj_proc = self.data._find_regex(C_RE_PROCEDURE_DECL_S, start_point, end_point)
-            if match_obj_proc is None:
-                match_obj_proc = self.data._find_regex(C_RE_PROCEDURE_DECL, start_point, end_point)
-            # la procedure est avant la function on garde la procedure
-            if ((match_obj is not None) and (match_obj_proc is not None) and (match_obj_proc[0] < match_obj[0])) or\
-               ((match_obj is None) and (match_obj_proc is not None)):
-                verb = 'procedure'
-                match_obj = match_obj_proc
-        else:
-            match_obj = self.data._find_regex(C_RE_FUNCTION_IMPL_S % impl, start_point, end_point)
-            if match_obj is None:            
-                match_obj = self.data._find_regex(C_RE_FUNCTION_IMPL % impl, start_point, end_point)
-            match_obj_proc = self.data._find_regex(C_RE_PROCEDURE_IMPL_S % impl, start_point, end_point)
-            if match_obj_proc is None:
-                match_obj_proc = self.data._find_regex(C_RE_PROCEDURE_IMPL % impl, start_point, end_point)
-            # la procedure est avant la function on garde la procedure
-            if match_obj_proc[0] < match_obj[0]:
-                match_obj = match_obj_proc
+        match_obj_deb = self.data._find_regex(C_RE_PROCEDURE_FUNCTION_DEB, start_point, end_point)
+        if match_obj_deb is not None:
+            verb = match_obj_deb[3][0].lower()
+            if impl == '':
+                if verb == 'function':
+                    match_obj = self.data._match_regex(C_RE_FUNCTION_DECL_S, match_obj_deb[0], end_point)
+                    if match_obj is None:
+                        match_obj = self.data._match_regex(C_RE_FUNCTION_DECL, match_obj_deb[0], end_point)
+                else:
+                    match_obj = self.data._match_regex(C_RE_PROCEDURE_DECL_S, match_obj_deb[0], end_point)
+                    if match_obj is None:
+                        match_obj = self.data._match_regex(C_RE_PROCEDURE_DECL, match_obj_deb[0], end_point)
+            else:
+                if verb == 'function':
+                    match_obj = self.data._match_regex(C_RE_FUNCTION_IMPL_S % impl, match_obj_deb[0], end_point)
+                    if match_obj is None:            
+                        match_obj = self.data._match_regex(C_RE_FUNCTION_IMPL % impl, match_obj_deb[0], end_point)
+                else:
+                    match_obj = self.data._match_regex(C_RE_PROCEDURE_IMPL_S % impl, match_obj_deb[0], end_point)
+                    if match_obj is None:
+                        match_obj = self.data._match_regex(C_RE_PROCEDURE_IMPL % impl, match_obj_deb[0], end_point)
+
         if match_obj is not None:
             logger.debug('resultat detection function/procedure %s : %s', verb, str(match_obj[3]))
             group_match = match_obj[3]
