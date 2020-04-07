@@ -1,4 +1,4 @@
-unit unit3;
+unit unit4;
 
 interface
 
@@ -13,12 +13,26 @@ interface
     FUNCTION Func2() : String;
     PROCEDURE Proc3;
     FUNCTION Func3 : Integer;
+
+    type
+        TClass1 = class
+            fparam1 : Integer;
+        public
+            function func_dans_la_classe() : string;
+        end;
+
     PROCEDURE Proc4(AParam1, AParam2 : Integer);
     FUNCTION Func4(AParam1, AParam2 : Integer) : Boolean;
     PROCEDURE Proc5(CONST AParam1, AParam2 : Integer);
     FUNCTION Func5(CONST AParam1, AParam2 : Integer) : Double;
     PROCEDURE Proc6(VAR AParam1, AParam2 : Integer);
     FUNCTION Func6(VAR AParam1, AParam2 : Integer) : Integer;
+
+    type
+        TRecord = record
+            fparam2 : Boolean;
+        end;
+
     PROCEDURE Proc7(OUT AParam1, AParam2 : Integer);
     FUNCTION Func7(OUT AParam1, AParam2 : Integer) : String;
     PROCEDURE Proc8(OUT AParam1, AParam2 : Integer); OVERLOAD;
