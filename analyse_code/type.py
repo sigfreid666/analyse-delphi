@@ -1,4 +1,5 @@
 from .log import *
+from .regex import *
 
 class cType:
     T_SIMPLE = 1
@@ -143,19 +144,46 @@ class cFonction:
 
 
 class cClasse(cType):
-    def __init__(self, nom, derivee, p_oData):
+    def __init__(self, nom, derivee, unite, p_oData):
         super().__init__(nom, '', p_oData, p_type=cType.T_CLASS)
+        self.unite = unite
         self.derivee = derivee
         self.liste_fonction = {}
         self.type_local = []
+        self.symbols = cTableSymbol()
+        self.liste_section = []
         logger.info('traitement de la classe %s', self.nom)
 
+    def analyse_section(self):
+        logger.info('analyse_section')
+        pos_anterieur = 0
+        nom_section = 'TOUT'
+        pos = self.data._find_regex(C_RE_SECTION_CLASS, 0, -1)
+        while pos is not None:
+            self.liste_section.append((pos_anterieur, pos[0], nom_section))
+            pos_anterieur = pos[1]
+            nom_section = pos[3]
+            pos = self.data._find_regex(C_RE_SECTION_CLASS, pos[1], -1)
+        self.liste_section.append((pos_anterieur, -1, nom_section))
+        logger.info('nombre section trouve : %d', len(self.liste_section))
+
+        for pos_section in self.liste_section:
+            logger.debug('traitement de la categorie %s', pos_section[2])
+            indice_pos = 0
+            # on commence par chercher les fonctions/procedures
+            pos_function = self.data._find_function(pos_section[0], pos_section[1])
+            while pos_function is not None:
+                self.symbols.ajouter(pos_function[3][0], cType('function', '', None), self.data.genere_fils(pos_function[0], pos_function[1]))
+                logger.debug('analyse_section : fonction trouve %s', str(pos_function))
+                pos_function = self.data._find_function(pos_function[1], pos_section[1])
+
     def __repr__(self):
-        return '[CLA <%s> -> <%s> : %d fct]' % (self.nom, self.derivee, len(self.liste_fonction.keys()))
+        return '[CLA <%s> -> <%s> : %d fct unite <%s>]' % (self.nom, self.derivee, len(self.liste_fonction.keys()), self.unite.nom)
     def __str__(self):
         chaine = self.__repr__() + '\n'
         chaine += '\tLigne debut : %d\n' % self.data.num_ligne(self.data.start_point)
         chaine += '\tLigne fin : %d\n' % self.data.num_ligne(self.data.end_point)
+        chaine += '\t'  + str(self.symbols)
         for fct in self.liste_fonction.values():
             chaine += str(fct) + '\n'
         return chaine

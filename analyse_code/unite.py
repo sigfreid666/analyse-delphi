@@ -56,18 +56,18 @@ class unite():
         logger.debug('analyse_type_interface : liste pos %s', str(self.type_interface_pos))
         for pos in self.type_interface_pos:
             fin = pos[0]
-            pos_function = self._find_function(debut, fin)
+            pos_function = self.data._find_function(debut, fin)
             while pos_function is not None:
                 self.symbols.ajouter(pos_function[3][0], cType('function', '', None), self.data.genere_fils(pos_function[0], pos_function[1]))
                 logger.debug('analyse_type_interface : fonction trouve %s', str(pos_function))
-                pos_function = self._find_function(pos_function[1], fin)
+                pos_function = self.data._find_function(pos_function[1], fin)
             debut = pos[1]
         fin = self.implementation_pos[0]
-        pos_function = self._find_function(debut, fin)
+        pos_function = self.data._find_function(debut, fin)
         while pos_function is not None:
             self.symbols.ajouter(pos_function[3][0], cType('function', '', None), self.data.genere_fils(pos_function[0], pos_function[1]))
             logger.debug('analyse_type_interface : fonction trouve %s', str(pos_function))
-            pos_function = self._find_function(pos_function[1], fin)
+            pos_function = self.data._find_function(pos_function[1], fin)
 
     def _analyse_type(self, start_point, end_point):
         logger.info('debut analyse type')
@@ -109,50 +109,6 @@ class unite():
     def _find_endfinal(self):
         return self.data._find_regex(C_RE_END_FINAL, 0, -1)
 
-    def _find_function(self, start_point, end_point, impl=''):
-        match_obj = None
-        verb = 'function'
-        liste_group = [ ]
-        match_obj_deb = self.data._find_regex(C_RE_PROCEDURE_FUNCTION_DEB, start_point, end_point)
-        if match_obj_deb is not None:
-            verb = match_obj_deb[3][0].lower()
-            if impl == '':
-                if verb == 'function':
-                    match_obj = self.data._match_regex(C_RE_FUNCTION_DECL_S, match_obj_deb[0], end_point)
-                    if match_obj is None:
-                        match_obj = self.data._match_regex(C_RE_FUNCTION_DECL, match_obj_deb[0], end_point)
-                else:
-                    match_obj = self.data._match_regex(C_RE_PROCEDURE_DECL_S, match_obj_deb[0], end_point)
-                    if match_obj is None:
-                        match_obj = self.data._match_regex(C_RE_PROCEDURE_DECL, match_obj_deb[0], end_point)
-            else:
-                if verb == 'function':
-                    match_obj = self.data._match_regex(C_RE_FUNCTION_IMPL_S % impl, match_obj_deb[0], end_point)
-                    if match_obj is None:            
-                        match_obj = self.data._match_regex(C_RE_FUNCTION_IMPL % impl, match_obj_deb[0], end_point)
-                else:
-                    match_obj = self.data._match_regex(C_RE_PROCEDURE_IMPL_S % impl, match_obj_deb[0], end_point)
-                    if match_obj is None:
-                        match_obj = self.data._match_regex(C_RE_PROCEDURE_IMPL % impl, match_obj_deb[0], end_point)
-
-        if match_obj is not None:
-            logger.debug('resultat detection function/procedure %s : %s', verb, str(match_obj[3]))
-            group_match = match_obj[3]
-            if len(match_obj[3]) == 4:
-                match_obj_param = re.finditer(C_RE_PARAM, group_match[1])
-                for match_iter in match_obj_param:
-                    liste_param = match_iter.groups()[1]
-                    if (liste_param == '') or (liste_param is None):
-                        logger.error('nom de parametre non trouve dans fonction %s', group_match[0])
-                    for param in liste_param.split(','):
-                        liste_group.append((match_iter.groups()[0], param.strip(), match_iter.groups()[2]))
-                group_match = (group_match[0], liste_group, group_match[2])
-            elif len(match_obj[3]) == 2:
-                group_match = (group_match[0], [], group_match[1], None)
-            else:
-                group_match = (group_match[0], [], group_match[1], group_match[2])
-            return (match_obj[0], match_obj[1], match_obj[2], group_match, verb)
-        return None
     def _find_procedure(self, start_point, end_point, impl=''):
         match_obj = None
         if impl == '':
@@ -240,7 +196,7 @@ class unite():
                 logger.info('classe trouve : %s', str(class_pos))
                 current_pos = class_pos[1] + 1
                 if class_pos[4][1].upper() == 'CLASS':
-                    resultat.ajouter(cClasse(class_pos[4][0], class_pos[4][2], self.data.genere_fils(class_pos[0], class_pos[1])))
+                    resultat.ajouter(cClasse(class_pos[4][0], class_pos[4][2], self, self.data.genere_fils(class_pos[0], class_pos[1])))
                 elif class_pos[4][1].upper() == 'RECORD':
                     resultat.ajouter(cType(class_pos[4][0], '', self.data.genere_fils(class_pos[0], class_pos[1]), p_type=cType.T_RECORD))
                 elif class_pos[4][1].upper() == 'INTERFACE':
