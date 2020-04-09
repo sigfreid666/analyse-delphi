@@ -176,6 +176,13 @@ class cClasse(cType):
                 self.symbols.ajouter(pos_function[3][0], cType('function', '', None), self.data.genere_fils(pos_function[0], pos_function[1]))
                 logger.debug('analyse_section : fonction trouve %s', str(pos_function))
                 pos_function = self.data._find_function(pos_function[1], pos_section[1])
+            # ensuite les membres
+            pos_membre = self.data._find_regex(C_RE_VAR, pos_section[0], pos_section[1])
+            while pos_membre is not None:
+                for nom in pos_membre[3][0].split(','):
+                    self.symbols.ajouter(nom, cType(pos_membre[3][1], '', None), self.data.genere_fils(pos_membre[0], pos_membre[1]))
+                    logger.debug('analyse_section : membres trouve %s %s', nom, str(pos_membre))
+                pos_membre = self.data._find_regex(C_RE_VAR, pos_membre[1], pos_section[1])
 
     def __repr__(self):
         return '[CLA <%s> -> <%s> : %d fct unite <%s>]' % (self.nom, self.derivee, len(self.liste_fonction.keys()), self.unite.nom)
