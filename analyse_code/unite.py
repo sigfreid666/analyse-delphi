@@ -58,6 +58,7 @@ class unite():
             fin = pos[0]
             pos_function = self._find_function(debut, fin)
             while pos_function is not None:
+                self.symbols.ajouter(pos_function[3][0], cType('function', '', None), self.data.genere_fils(pos_function[0], pos_function[1]))
                 logger.debug('analyse_type_interface : fonction trouve %s', str(pos_function))
                 pos_function = self._find_function(pos_function[1], fin)
             debut = pos[1]
@@ -112,30 +113,30 @@ class unite():
         match_obj = None
         verb = 'function'
         liste_group = [ ]
-        if impl == '':
-            match_obj = self.data._find_regex(C_RE_FUNCTION_DECL_S, start_point, end_point)
-            if match_obj is None:
-                match_obj = self.data._find_regex(C_RE_FUNCTION_DECL, start_point, end_point)
-            match_obj_proc = self.data._find_regex(C_RE_PROCEDURE_DECL_S, start_point, end_point)
-            if match_obj_proc is None:
-                match_obj_proc = self.data._find_regex(C_RE_PROCEDURE_DECL, start_point, end_point)
-            # la procedure est avant la function on garde la procedure
-            if ((match_obj is not None) and (match_obj_proc is not None) and (match_obj_proc[0] < match_obj[0])) or\
-               ((match_obj is None) and (match_obj_proc is not None)):
-                verb = 'procedure'
-                match_obj = match_obj_proc
-        else:
-            match_obj = self.data._find_regex(C_RE_FUNCTION_IMPL_S % impl, start_point, end_point)
-            if match_obj is None:            
-                match_obj = self.data._find_regex(C_RE_FUNCTION_IMPL % impl, start_point, end_point)
-            match_obj_proc = self.data._find_regex(C_RE_PROCEDURE_IMPL_S % impl, start_point, end_point)
-            if match_obj_proc is None:
-                match_obj_proc = self.data._find_regex(C_RE_PROCEDURE_IMPL % impl, start_point, end_point)
-            # la procedure est avant la function on garde la procedure
-            if match_obj_proc[0] < match_obj[0]:
-                match_obj = match_obj_proc
+        match_obj_deb = self.data._find_regex(C_RE_PROCEDURE_FUNCTION_DEB, start_point, end_point)
+        if match_obj_deb is not None:
+            verb = match_obj_deb[3][0].lower()
+            if impl == '':
+                if verb == 'function':
+                    match_obj = self.data._match_regex(C_RE_FUNCTION_DECL_S, match_obj_deb[0], end_point)
+                    if match_obj is None:
+                        match_obj = self.data._match_regex(C_RE_FUNCTION_DECL, match_obj_deb[0], end_point)
+                else:
+                    match_obj = self.data._match_regex(C_RE_PROCEDURE_DECL_S, match_obj_deb[0], end_point)
+                    if match_obj is None:
+                        match_obj = self.data._match_regex(C_RE_PROCEDURE_DECL, match_obj_deb[0], end_point)
+            else:
+                if verb == 'function':
+                    match_obj = self.data._match_regex(C_RE_FUNCTION_IMPL_S % impl, match_obj_deb[0], end_point)
+                    if match_obj is None:            
+                        match_obj = self.data._match_regex(C_RE_FUNCTION_IMPL % impl, match_obj_deb[0], end_point)
+                else:
+                    match_obj = self.data._match_regex(C_RE_PROCEDURE_IMPL_S % impl, match_obj_deb[0], end_point)
+                    if match_obj is None:
+                        match_obj = self.data._match_regex(C_RE_PROCEDURE_IMPL % impl, match_obj_deb[0], end_point)
+
         if match_obj is not None:
-            logger.debug('resultat detection function/procedure : %s', str(match_obj[3]))
+            logger.debug('resultat detection function/procedure %s : %s', verb, str(match_obj[3]))
             group_match = match_obj[3]
             if len(match_obj[3]) == 4:
                 match_obj_param = re.finditer(C_RE_PARAM, group_match[1])
@@ -146,6 +147,8 @@ class unite():
                     for param in liste_param.split(','):
                         liste_group.append((match_iter.groups()[0], param.strip(), match_iter.groups()[2]))
                 group_match = (group_match[0], liste_group, group_match[2])
+            elif len(match_obj[3]) == 2:
+                group_match = (group_match[0], [], group_match[1], None)
             else:
                 group_match = (group_match[0], [], group_match[1], group_match[2])
             return (match_obj[0], match_obj[1], match_obj[2], group_match, verb)
@@ -221,7 +224,6 @@ class unite():
         return self.data._find_regex(C_RE_DECL_TYPE, start_point, end_point)
 
     def _analyse_section_type(self, start_point, end_point):
-        resultat = { 'class': [], 'record': [], 'type': [], 'setof': [], 'type_procedure': [], 'finsection': end_point}
         resultat = cEnsembleType(self.data.genere_fils(start_point, end_point))
         current_pos = start_point
         logger.debug('analyse type : %s', self.data.data[current_pos:current_pos+30])
@@ -237,10 +239,14 @@ class unite():
             if (class_pos is not None) and (class_pos[0] == current_pos):
                 logger.info('classe trouve : %s', str(class_pos))
                 current_pos = class_pos[1] + 1
-                if class_pos[4][1] == 'CLASS':
+                if class_pos[4][1].upper() == 'CLASS':
                     resultat.ajouter(cClasse(class_pos[4][0], class_pos[4][2], self.data.genere_fils(class_pos[0], class_pos[1])))
+                elif class_pos[4][1].upper() == 'RECORD':
+                    resultat.ajouter(cType(class_pos[4][0], '', self.data.genere_fils(class_pos[0], class_pos[1]), p_type=cType.T_RECORD))
+                elif class_pos[4][1].upper() == 'INTERFACE':
+                    resultat.ajouter(cType(class_pos[4][0], '', self.data.genere_fils(class_pos[0], class_pos[1]), p_type=cType.T_INTERFACE))
                 else:
-                    resultat.ajouter(cType(class_pos[4][0], '', self.data.genere_fils(class_pos[0], class_pos[1]), p_type=class_pos[4][1]))
+                    resultat.ajouter(cType(class_pos[4][0], '', self.data.genere_fils(class_pos[0], class_pos[1])))
                 # resultat['class'].append(class_pos) 
             else:
                 typefunc_pos = self._find_type_proc_func(current_pos, end_point)

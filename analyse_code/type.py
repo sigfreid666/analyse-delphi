@@ -1,10 +1,10 @@
-from . import log
+from .log import *
 
 class cType:
     T_SIMPLE = 1
     T_CLASS = 2
     T_RECORD = 3
-    T_DEFINIT = 4
+    T_INTERFACE = 4
     def __init__(self, p_nom, p_definition, p_oData, p_type=T_SIMPLE):
         self.nom = p_nom
         self.definition = p_definition
@@ -24,7 +24,7 @@ class cEnsembleType:
         else:
             self.types[o_ctype.nom] = [o_ctype]
 
-    def chercher(self, nom_type, cat_type='simple'):
+    def chercher(self, nom_type, cat_type='*'):
         if nom_type in self.types:
             if cat_type == '*':
                 return self.types[nom_type]

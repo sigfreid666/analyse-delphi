@@ -1,0 +1,15 @@
+{
+	"folders":
+	[
+		{
+			"path": "."
+		}
+	],
+    "build_systems":
+    [
+        {
+            "name": "test",
+            "shell_cmd": "python3 -m pytest -v"
+        }
+    ]
+}
