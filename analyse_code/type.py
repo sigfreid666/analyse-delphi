@@ -169,7 +169,6 @@ class cClasse(cType):
 
         for pos_section in self.liste_section:
             logger.debug('traitement de la categorie %s', pos_section[2])
-            indice_pos = 0
             # on commence par chercher les fonctions/procedures
             pos_function = self.data._find_function(pos_section[0], pos_section[1])
             while pos_function is not None:
@@ -180,7 +179,7 @@ class cClasse(cType):
             pos_membre = self.data._find_regex(C_RE_VAR, pos_section[0], pos_section[1])
             while pos_membre is not None:
                 for nom in pos_membre[3][0].split(','):
-                    self.symbols.ajouter(nom, cType(pos_membre[3][1], '', None), self.data.genere_fils(pos_membre[0], pos_membre[1]))
+                    self.symbols.ajouter(nom.strip(' '), cType(pos_membre[3][1], '', None), self.data.genere_fils(pos_membre[0], pos_membre[1]))
                     logger.debug('analyse_section : membres trouve %s %s', nom, str(pos_membre))
                 pos_membre = self.data._find_regex(C_RE_VAR, pos_membre[1], pos_section[1])
 
