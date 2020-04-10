@@ -13,6 +13,11 @@ interface
         public
             mavar2, mavar3 : integer;
             function mafunc3(aparam2 : string) : integer;
+
+            property maprop1 : integer read mavar1 write mavar1 implements itest;
+            property maprop2 : integer write mavar1;
+            property maprop3 : integer read mavar1;
+            property maprop4 : integer read mavar1 implements itest;
         published
             function mafunc4(aparam2 : string) : integer;
         private

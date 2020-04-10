@@ -156,7 +156,7 @@ class cClasse(cType):
 
     def analyse_section(self):
         logger.info('analyse_section')
-        pos_anterieur = 0
+        pos_anterieur = self.data._match_regex(C_RE_CLASS_DEB, 0, -1)[1]
         nom_section = 'TOUT'
         pos = self.data._find_regex(C_RE_SECTION_CLASS, 0, -1)
         while pos is not None:
@@ -167,22 +167,31 @@ class cClasse(cType):
         self.liste_section.append((pos_anterieur, -1, nom_section))
         logger.info('nombre section trouve : %d', len(self.liste_section))
 
+        data = {C_RE_PROCEDURE_FUNCTION_DEB: 'function',
+                C_RE_VAR: 'var',
+                C_RE_PROPERTY: 'property'}
         for pos_section in self.liste_section:
             logger.debug('traitement de la categorie %s', pos_section[2])
-            # on commence par chercher les fonctions/procedures
-            pos_function = self.data._find_function(pos_section[0], pos_section[1])
-            while pos_function is not None:
-                self.symbols.ajouter(pos_function[3][0], cType('function', '', None), self.data.genere_fils(pos_function[0], pos_function[1]))
-                logger.debug('analyse_section : fonction trouve %s', str(pos_function))
-                pos_function = self.data._find_function(pos_function[1], pos_section[1])
-            # ensuite les membres
-            pos_membre = self.data._find_regex(C_RE_VAR, pos_section[0], pos_section[1])
-            while pos_membre is not None:
-                for nom in pos_membre[3][0].split(','):
-                    self.symbols.ajouter(nom.strip(' '), cType(pos_membre[3][1], '', None), self.data.genere_fils(pos_membre[0], pos_membre[1]))
-                    logger.debug('analyse_section : membres trouve %s %s', nom, str(pos_membre))
-                pos_membre = self.data._find_regex(C_RE_VAR, pos_membre[1], pos_section[1])
-
+            position = (0, pos_section[0]) # self.data._match_regex(r'\s+', pos_section[0], pos_section[1])
+            logger.debug('saut de la section %s', str(position))
+            while position is not None:
+                debut = position[1]
+                for ire in data:
+                    logger.debug('tentative detection %s', data[ire])
+                    position = self.data._match_regex(ire, debut, pos_section[1]) 
+                    if position is not None:
+                        if data[ire] == 'function':
+                            position = self.data._find_function(position[0], pos_section[1])
+                            self.symbols.ajouter(position[3][0], cType('function', '', None), self.data.genere_fils(position[0], position[1]))
+                        elif data[ire] == 'var':
+                            for nom in position[3][0].split(','):
+                                self.symbols.ajouter(nom.strip(' '), cType(position[3][1], '', None), self.data.genere_fils(position[0], position[1]))
+                        elif data[ire] == 'property':
+                            self.symbols.ajouter(position[3][0], cType(position[3][1], '', None), self.data.genere_fils(position[0], position[1]))
+                        break
+                if position is not None:
+                    position = self.data._match_regex(r'\s*', position[1], pos_section[1])
+                    
     def __repr__(self):
         return '[CLA <%s> -> <%s> : %d fct unite <%s>]' % (self.nom, self.derivee, len(self.liste_fonction.keys()), self.unite.nom)
     def __str__(self):

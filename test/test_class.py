@@ -23,3 +23,7 @@ def test_func_dans_classe(unit5):
     assert len(classe.symbols.chercher('mavar1')) == 1
     assert len(classe.symbols.chercher('mavar2')) == 1
     assert len(classe.symbols.chercher('mavar3')) == 1
+    assert len(classe.symbols.chercher('maprop1')) == 1
+    assert len(classe.symbols.chercher('maprop2')) == 1
+    assert len(classe.symbols.chercher('maprop3')) == 1
+    assert len(classe.symbols.chercher('maprop4')) == 1

@@ -23,3 +23,4 @@ C_RE_PROCEDURE_IMPL_S = r'(?:PROCEDURE|CONSTRUCTOR)[ ]+(%s)[ ]*;(?:[ ]*(OVERLOAD
 C_RE_PROCEDURE_FUNCTION_DEB = r'(PROCEDURE|CONSTRUCTOR|FUNCTION)[ ]+'
 C_RE_SECTION_CLASS = r'(PUBLIC|PRIVATE|PROTECTED|TYPE|VAR|CONST|PUBLISHED)\s+'
 C_RE_VAR = r'((?:\w+\,?\s*)+):\s*(\w+)\s*;'
+C_RE_PROPERTY = r'PROPERTY\s+(\w+)\s*:\s*(\w+)\s*(?:(READ)\s*(\w+))?\s*(?:(WRITE)\s*(\w+))?\s*(?:(IMPLEMENTS)\s*(\w+))?;'
