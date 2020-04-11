@@ -17,8 +17,8 @@ class unite():
         self.nom = ''
         with codecs.open(str(nom_fichier), 'r', encoding='utf-8-sig') as f:
             lignes = f.readlines()
-            self.gestion_ml = gestion_multiligne.gestion_multiligne(lignes)
-            self.data = cData(self.gestion_ml)
+            self.data = cData(lignes)
+            self.gestion_ml = self.data.ogestionmultiligne
 
         logger.info('Analyse du fichier <%s>', str(self.nom_fichier))
         self.pos_unite = self._find_unit()
