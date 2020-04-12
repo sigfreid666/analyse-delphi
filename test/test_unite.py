@@ -8,7 +8,7 @@ def unit1():
 @pytest.fixture
 def unit2():
     unit = analyse_code.unite('./test/unit2.pas')
-    unit.analyse_type_interface()
+    # unit.analyse_type_interface()
     return unit
     
 def test_unite_analyse(unit1):

@@ -4,13 +4,11 @@ import analyse_code
 @pytest.fixture
 def unit3():
     unit = analyse_code.unite('./test/unit3.pas')
-    unit.analyse_type_interface()
     return unit
 
 @pytest.fixture
 def unit4():
     unit = analyse_code.unite('./test/unit4.pas')
-    unit.analyse_type_interface()
     return unit
 
 def test_func(unit3):
