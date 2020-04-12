@@ -21,5 +21,8 @@ implementation
         troisieme,
         quatrieme;
 
+    const
+        C_MYConst = 1;
+
 end.
 

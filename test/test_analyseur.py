@@ -41,3 +41,14 @@ def test_func4(data):
     assert len(data.chercher(p_type='function')) == 3
     assert len(data.chercher(p_type='section_type')) == 1
     assert len(data.chercher(p_type='class')) == 1
+
+def test_func5(data):
+    data = data('./test/unit_analyseur_4.pas')
+    data = analyse_code.analyseur_unit_simple.analyse(data)[0]
+    assert data is not None
+    assert len(data.chercher(p_type='unit')) == 1
+    assert len(data.chercher(p_type='interface')) == 1
+    assert len(data.chercher(p_type='implementation')) == 1
+    assert len(data.chercher(p_type='function')) == 0
+    assert len(data.chercher(p_type='section_type')) == 0
+    assert len(data.chercher(p_type='class')) == 0

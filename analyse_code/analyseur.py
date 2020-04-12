@@ -99,6 +99,32 @@ class cAnalyseur:
         return '[re <%s> type<%s> fils<%s> obl<%s>]' % (self.re, self.type, str(self.fils), str(self.obligatoire))
 
 
+class cAnalyseurZone:
+    """Analyseur de zone, analyse d'un point de départ jusqu'à une regex, permet de sauter des zones
+    bien délimitées"""
+    def __init__(self, p_re, p_type, p_obligatoire=True):
+        self.re = p_re
+        self.type = p_type
+        self.obligatoire = p_obligatoire
+
+    def analyse(self, data, position=0):
+        logger.debug('debut analyse type<%s> obl<%s>', self.type, str(self.obligatoire))
+        resultat = None
+        pos = data._find_regex(self.re, position, -1)
+        if pos is not None:
+            resultat = cGroupeResultat.cResultat(self.type, pos, None)
+            position = pos[1]
+        elif self.obligatoire:
+            raise Exception('impossible de trouver %s' % str(self))
+        return resultat, position
+
+    def __repr__(self):
+        return 'cAnalyseurZone<%s>' % self.type
+
+    def __str__(self):
+        return '[re <%s> type<%s> obl<%s>]' % (self.re, self.type, str(self.obligatoire))
+
+
 class cRepeteurAnalyseur:
     """Repete n fois un analyseur"""
     def __init__(self, p_analyseur):
@@ -200,4 +226,12 @@ analyseur_unit = cListeAnalyseur((
     analyseur_type_function(analyseur_types),
     cAnalyseur(C_RE_IMPLEMENTATION, 'implementation'),
     cAnalyseur(C_RE_USES, 'uses', p_obligatoire=False),
-    cAnalyseur(C_RE_END_FINAL, 'end_final')))
+    cAnalyseurZone(C_RE_END_FINAL, 'end_final')))
+
+analyseur_unit_simple = cListeAnalyseur((
+    cAnalyseur(C_RE_UNIT, 'unit'),
+    cAnalyseur(C_RE_INTERFACE, 'interface'),
+    cAnalyseur(C_RE_USES, 'uses', p_obligatoire=False),
+    cAnalyseurZone(C_RE_IMPLEMENTATION, 'implementation'),
+    cAnalyseur(C_RE_USES, 'uses', p_obligatoire=False),
+    cAnalyseurZone(C_RE_END_FINAL, 'end_final')))
