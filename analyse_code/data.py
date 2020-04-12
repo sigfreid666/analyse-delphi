@@ -5,9 +5,9 @@ from .log import logger
 from .regex import *
 
 class cData:
-    def __init__(self, ogestionmultiligne, start_point=0, end_point=-1):
-        self.ogestionmultiligne = ogestionmultiligne
-        self.data = ogestionmultiligne.data
+    def __init__(self, lignes, start_point=0, end_point=-1):
+        self.ogestionmultiligne = gestion_multiligne.gestion_multiligne(lignes)
+        self.data = self.ogestionmultiligne.data
         self.start_point = start_point
         self.end_point = end_point
 
@@ -86,7 +86,10 @@ class cData:
 
 
     def genere_fils(self, new_start_point, new_end_point):
-        return cData(self.ogestionmultiligne, new_start_point, new_end_point)
+        new_data = cData([], new_start_point, new_end_point)
+        new_data.ogestionmultiligne = self.ogestionmultiligne
+        new_data.data = new_data.ogestionmultiligne.data
+        return new_data
 
     def num_ligne(self, indice):
         return self.ogestionmultiligne.num_ligne(indice)
