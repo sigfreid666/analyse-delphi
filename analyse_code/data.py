@@ -10,44 +10,6 @@ class cData:
         self.start_point = start_point
         self.end_point = end_point
 
-    def analyse(self, liste_analyseur):
-        resultat = []
-        position = 0
-        for ianalyseur in liste_analyseur:
-            # on saute tout espace trouve
-            pos_espace = self._match_regex(r'\s+', position, -1)
-            if pos_espace is not None:
-                logger.debug('saut d espace')
-                position = pos_espace[1]
-            # si l'element a analyse est une liste 
-            if type(ianalyseur) != tuple:
-                ianalyseur = [ianalyseur]
-                logger.debug('liste d analyseur detecte nb %d', len(ianalyseur))
-            # c'est le premier qui dit si l'ensemble est obligatoire
-            trouve = not ianalyseur[0].obligatoire
-            # on parcours l'un des element doit etre valide pour passer au suivant
-            for isous_analyseur in ianalyseur:
-                logger.debug('recherche de %s', isous_analyseur.type)
-                # le re est une liste d expression reguliere
-                for regex in isous_analyseur.re:
-                    pos = self._match_regex(regex, position, -1)
-                    if pos is not None:
-                        break
-                # on a trouve quelque chose
-                if pos is not None:
-                    trouve = True
-                    logger.debug('trouve')
-                    resultat.append((isous_analyseur.type, pos))
-                    position = pos[1]
-                    # maintenant on parcours les fils
-                    if len(isous_analyseur.fils) > 0:
-                        resultat.append(self.analyse(isous_analyseur.fils))
-                    break
-            if not trouve:
-                raise Exception('impossible de trouver %s' % str(ianalyseur[0]))
-        return resultat
-
-
     def _find_regex(self, str_regex, start_point, end_point):
         logger.info('_find_regex : <%s> <%d> <%d> <%d> <%d>', str_regex, start_point, end_point, self.ogestionmultiligne.num_ligne(start_point), self.ogestionmultiligne.num_ligne(end_point))
         start = self.start_point + start_point
@@ -75,7 +37,10 @@ class cData:
         return None
 
     def genere_fils(self, new_start_point, new_end_point):
-        return cData(self.ogestionmultiligne, new_start_point, new_end_point)
+        new_data = cData([], new_start_point, new_end_point)
+        new_data.ogestionmultiligne = self.ogestionmultiligne
+        new_data.data = new_data.ogestionmultiligne.data
+        return new_data
 
     def num_ligne(self, indice):
         return self.ogestionmultiligne.num_ligne(indice)

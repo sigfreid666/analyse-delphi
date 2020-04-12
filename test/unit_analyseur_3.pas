@@ -8,6 +8,9 @@ interface
 
     function myfunc(AParam1 : integer) : string;
     procedure myproc(AParam1 : integer);
+    type
+        tclass1 = class
+        end;
 
 implementation
 
