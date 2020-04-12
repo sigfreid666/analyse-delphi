@@ -12,6 +12,7 @@ interface
         tclass1 = class
             fparam1 : integer;
             fparam2 : string;
+            function myfuncclass1(AParam2 : string) : string;
         end;
 
 implementation
