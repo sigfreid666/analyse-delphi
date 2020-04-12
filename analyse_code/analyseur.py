@@ -16,6 +16,7 @@ from .regex import C_RE_IMPLEMENTATION
 from .regex import C_RE_END_FINAL
 from .regex import C_RE_END
 from .regex import C_RE_VAR
+from .regex import C_RE_SECTION_CLASS
 
 
 class cGroupeResultat():
@@ -162,7 +163,10 @@ class cListeAnalyseur:
                 resultat.ajouter(elem_resultat)
                 position = elem_position
         logger.debug('cListeAnalyseur : fin analyse')
-        return resultat, position
+        if len(resultat.resultats) == 0:
+            return None, position
+        else:
+            return resultat, position
 
 
 class cGroupeAnalyseur():
@@ -190,30 +194,35 @@ class cGroupeAnalyseur():
 def analyseur_type_function(func_analyseur_type):
     return cRepeteurAnalyseur(
         cGroupeAnalyseur((
+            cAnalyseur(C_RE_TYPES, 'section_type', p_fils=func_analyseur_type),
             cAnalyseur(C_RE_FUNCTION_DECL, 'function'),
             cAnalyseur(C_RE_FUNCTION_DECL_S, 'function'),
             cAnalyseur(C_RE_PROCEDURE_DECL, 'function'),
-            cAnalyseur(C_RE_PROCEDURE_DECL_S, 'function'),
-            cAnalyseur(C_RE_TYPES, 'section_type', p_fils=func_analyseur_type)),
+            cAnalyseur(C_RE_PROCEDURE_DECL_S, 'function')),
             p_obligatoire=False))
 
 
 def analyseur_types():
-    return cGroupeAnalyseur((
-        cAnalyseur(C_RE_CLASS_DEB, 'class', p_fils=analyseur_class()),
-        cAnalyseur(C_RE_TYPE_PROC_FUNC, 'type_function'),
-        cAnalyseur(C_RE_DECL_TYPE_SETOF, 'type_setof'),
-        cAnalyseur(C_RE_DECL_TYPE, 'type_autre')
-    ))
-
+    return \
+        cRepeteurAnalyseur(
+            cGroupeAnalyseur((
+                cAnalyseur(C_RE_CLASS_DEB, 'class', p_fils=analyseur_class()),
+                cAnalyseur(C_RE_TYPE_PROC_FUNC, 'type_function'),
+                cAnalyseur(C_RE_DECL_TYPE_SETOF, 'type_setof'),
+                cAnalyseur(C_RE_DECL_TYPE, 'type_autre')
+            ), p_obligatoire=False)
+        )
 
 def analyseur_class():
     return cListeAnalyseur((
         cRepeteurAnalyseur(
-            cGroupeAnalyseur((
-                cAnalyseur(C_RE_VAR, 'menber'),
-                analyseur_type_function(analyseur_types)
-            ), p_obligatoire=False)
+            cListeAnalyseur((
+                cAnalyseur(C_RE_SECTION_CLASS, 'section_class', p_obligatoire=False),
+                cGroupeAnalyseur((
+                    analyseur_type_function(analyseur_types),
+                    cAnalyseur(C_RE_VAR, 'menber')
+                ), p_obligatoire=False)
+            ))
         ),
         cAnalyseur(C_RE_END, 'end'),
     ))

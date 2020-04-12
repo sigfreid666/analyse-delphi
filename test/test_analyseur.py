@@ -25,7 +25,7 @@ def test_func2(data):
     data = analyse_code.analyseur_unit.analyse(data)[0]
     assert data is not None
     assert len(data.chercher(p_type='uses_interface')) == 1
-    assert len(data.chercher(p_type='uses_implentation')) == 1
+    assert len(data.chercher(p_type='uses_implementation')) == 1
 
 def test_func3(data):
     data = data('./test/unit_analyseur_3.pas')
