@@ -44,14 +44,14 @@ class cGroupeResultat():
             self.resultats.append(p_resultats)
         return self
 
-    def chercher(self, p_type='', p_nom=''):
+    def chercher(self, p_type='', p_nom='', recurse=True):
         res = []
         for resultat in self.resultats:
             if (p_type != '') and (resultat.type == p_type):
                 res.append(resultat)
             if (p_nom != '') and (resultat.type == p_nom):
                 res.append(resultat)
-            if resultat.fils is not None:
+            if recurse and (resultat.fils is not None):
                 if type(resultat.fils) == cGroupeResultat:
                     for elem in resultat.fils.chercher(p_type=p_type, p_nom=p_nom):
                         res.append(elem)
@@ -222,16 +222,16 @@ def analyseur_class():
 analyseur_unit = cListeAnalyseur((
     cAnalyseur(C_RE_UNIT, 'unit'),
     cAnalyseur(C_RE_INTERFACE, 'interface'),
-    cAnalyseur(C_RE_USES, 'uses', p_obligatoire=False),
+    cAnalyseur(C_RE_USES, 'uses_interface', p_obligatoire=False),
     analyseur_type_function(analyseur_types),
     cAnalyseur(C_RE_IMPLEMENTATION, 'implementation'),
-    cAnalyseur(C_RE_USES, 'uses', p_obligatoire=False),
+    cAnalyseur(C_RE_USES, 'uses_implementation', p_obligatoire=False),
     cAnalyseurZone(C_RE_END_FINAL, 'end_final')))
 
 analyseur_unit_simple = cListeAnalyseur((
     cAnalyseur(C_RE_UNIT, 'unit'),
     cAnalyseur(C_RE_INTERFACE, 'interface'),
-    cAnalyseur(C_RE_USES, 'uses', p_obligatoire=False),
+    cAnalyseur(C_RE_USES, 'uses_interface', p_obligatoire=False),
     cAnalyseurZone(C_RE_IMPLEMENTATION, 'implementation'),
-    cAnalyseur(C_RE_USES, 'uses', p_obligatoire=False),
+    cAnalyseur(C_RE_USES, 'uses_implementation', p_obligatoire=False),
     cAnalyseurZone(C_RE_END_FINAL, 'end_final')))

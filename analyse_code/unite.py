@@ -9,6 +9,8 @@ from .uses import *
 from .regex import *
 from .type import *
 
+from .analyseur import analyseur_unit
+
 class unite():
     def __init__(self, nom_fichier):
         self.data = ''
@@ -21,33 +23,52 @@ class unite():
             self.gestion_ml = self.data.ogestionmultiligne
 
         logger.info('Analyse du fichier <%s>', str(self.nom_fichier))
-        self.pos_unite = self._find_unit()
-        self.nom = self.pos_unite[3][0]
+        self.analyse = analyseur_unit.analyse(self.data)[0]
+        # self.pos_unite = self._find_unit()
+        self.nom = self.analyse.chercher(p_type='unit') # self.pos_unite[3][0]
+        if len(self.nom) > 0:
+            self.nom = self.nom[0].reconnu[0]
+            logger.info('nom unite trouve <%s>', self.nom)
+
+        self.uses_interface = self.uses_implementation = None
+
+        res = self.analyse.chercher(p_type='uses_interface')
+        if len(res) == 1:
+            self.uses_interface = cUses(res[0].reconnu[0])
+        res = self.analyse.chercher(p_type='uses_implementation')
+        if len(res) == 1:
+            self.uses_implementation = cUses(res[0].reconnu[0])
+
         self.liste_classe = []
         self.liste_section_interface = []
         self.liste_fonction = []
         self.type_interface_pos = []
         self.liste_type_interface = []
         self.symbols = cTableSymbol()
-        self.uses_inter_pos = self.uses_interface = None
-        self.uses_impl_pos = self.uses_implementation = None
         self.liste_unite = []
-        self.interface_pos = self._find_interface()
-        if self.interface_pos is None:
-            logger.error('impossible de trouver la section interface')
-        self.implementation_pos = self._find_implementation()
-        if self.implementation_pos is None:
-            logger.error('impossible de trouver la section implementation')
-        self.end_final_pos = self._find_endfinal()
-        if self.end_final_pos is None:
-            logger.error('impossible de trouver le end final')
-        if (self.interface_pos is not None) and (self.implementation_pos is not None):
-            self.uses_inter_pos = self._find_uses(self.interface_pos[1], self.implementation_pos[0])
-            self.uses_impl_pos = self._find_uses(self.implementation_pos[1], self.end_final_pos[0])
-            if self.uses_inter_pos is not None:
-                self.uses_interface = cUses(self.uses_inter_pos[3][0])
-            if self.uses_impl_pos is not None:
-                self.uses_implementation = cUses(self.uses_impl_pos[3][0])
+
+        resultat = []
+        res = self.analyse.chercher(p_type='section_type', recurse=False) # on recherche que le premier niveau
+        if len(res) > 0:
+            for section_type in res:
+                resultat.append(cEnsembleType(self.data.genere_fils(section_type.debut, section_type.fin)))
+                for element in section_type.fils.chercher(p_type='class'):
+                    if element.reconnu[1].upper() == 'CLASS':
+                        resultat[-1].ajouter(cClasse(element.reconnu[0], element.reconnu[2], self.data.genere_fils(element.debut, element.fin)))
+                    elif element.reconnu[1].upper() == 'RECORD':
+                        resultat[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin), p_type=cType.T_RECORD))
+                    elif element.reconnu[1].upper() == 'INTERFACE':
+                        resultat[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin), p_type=cType.T_INTERFACE))
+                    else:
+                        resultat[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin)))
+
+                for element in section_type.fils.chercher(p_type='type_function'):
+                    resultat[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin)))
+                for element in section_type.fils.chercher(p_type='type_autre'):
+                    resultat[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin)))
+
+            self.liste_type_interface = resultat
+
 
     def analyse_type_interface(self):
         self.type_interface_pos, self.liste_type_interface = self._analyse_type(self.interface_pos[1], self.implementation_pos[0])
