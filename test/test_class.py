@@ -5,7 +5,6 @@ import analyse_code
 @pytest.fixture
 def unit5():
     unit = analyse_code.unite('./test/unit5.pas')
-    unit.analyse_type_interface()
     return unit
 
 def test_func_dans_classe(unit5):
