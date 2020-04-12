@@ -34,10 +34,10 @@ def test_func3(data):
     assert len(data.chercher(p_type='section_type')) == 1
     assert len(data.chercher(p_type='class')) == 1
 
-# def test_func4(data):
-#     data = data('./test/unit_analyseur_4.pas')
-#     data = analyse_code.analyseur_unit.analyse(data)[0]
-#     assert data is not None
-#     assert len(data.chercher(p_type='function')) == 2
-#     assert len(data.chercher(p_type='section_type')) == 1
-#     assert len(data.chercher(p_type='class')) == 1
+def test_func4(data):
+    data = data('./test/unit_analyseur_4.pas')
+    data = analyse_code.analyseur_unit.analyse(data)[0]
+    assert data is not None
+    assert len(data.chercher(p_type='function')) == 2
+    assert len(data.chercher(p_type='section_type')) == 1
+    assert len(data.chercher(p_type='class')) == 1

@@ -14,6 +14,7 @@ from .regex import C_RE_TYPES
 from .regex import C_RE_IMPLEMENTATION
 from .regex import C_RE_END_FINAL
 from .regex import C_RE_END
+from .regex import C_RE_VAR
 
 
 class cGroupeResultat():
@@ -154,6 +155,11 @@ class cGroupeAnalyseur():
 
 
 analyseur_class = cListeAnalyseur((
+    cRepeteurAnalyseur(
+        cGroupeAnalyseur((
+            cAnalyseur(C_RE_VAR, 'menber'),
+        ), p_obligatoire=False)
+    ),
     cAnalyseur(C_RE_END, 'end'),
 ))
 
