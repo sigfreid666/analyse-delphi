@@ -1,5 +1,20 @@
 from .log import logger
-from .regex import *
+from .regex import C_RE_CLASS_DEB
+from .regex import C_RE_TYPE_PROC_FUNC
+from .regex import C_RE_DECL_TYPE_SETOF
+from .regex import C_RE_DECL_TYPE
+from .regex import C_RE_UNIT
+from .regex import C_RE_INTERFACE
+from .regex import C_RE_USES
+from .regex import C_RE_FUNCTION_DECL
+from .regex import C_RE_FUNCTION_DECL_S
+from .regex import C_RE_PROCEDURE_DECL
+from .regex import C_RE_PROCEDURE_DECL_S
+from .regex import C_RE_TYPES
+from .regex import C_RE_IMPLEMENTATION
+from .regex import C_RE_END_FINAL
+from .regex import C_RE_END
+
 
 class cGroupeResultat():
     """Ensemble des resultats d'une analyse"""
@@ -15,7 +30,7 @@ class cGroupeResultat():
                 self.fils = cGroupeResultat().ajouter(p_fils)
             else:
                 self.fils = None
-            
+
     def __init__(self):
         self.resultats = []
 
@@ -45,7 +60,7 @@ class cGroupeResultat():
                         res.append(resultat.fils)
         return res
 
-        
+
 class cAnalyseur:
     """Analyseur simple"""
     def __init__(self, p_re, p_type, p_fils=None, p_obligatoire=True):
@@ -78,11 +93,12 @@ class cAnalyseur:
     def __str__(self):
         return '[re <%s> type<%s> fils<%s> obl<%s>]' % (self.re, self.type, str(self.fils), str(self.obligatoire))
 
+
 class cRepeteurAnalyseur:
     """Repete n fois un analyseur"""
     def __init__(self, p_analyseur):
         self.analyseur = p_analyseur
-                        
+
     def analyse(self, data, position=0):
         logger.debug('cRepeteurAnalyseur : debut analyse')
         resultat = cGroupeResultat()
@@ -96,6 +112,7 @@ class cRepeteurAnalyseur:
             resultat.ajouter(elem_resultat)
         logger.debug('cRepeteurAnalyseur : fin analyse')
         return resultat, position
+
 
 class cListeAnalyseur:
     """Liste sequentiel d'analyseur"""
@@ -111,7 +128,8 @@ class cListeAnalyseur:
                 resultat.ajouter(elem_resultat)
                 position = elem_position
         logger.debug('cListeAnalyseur : fin analyse')
-        return resultat, position        
+        return resultat, position
+
 
 class cGroupeAnalyseur():
     """Groupement d'analyseur, des qu'un correspond arrete l'analyse"""
@@ -124,7 +142,7 @@ class cGroupeAnalyseur():
     def analyse(self, data, position=0):
         logger.debug('cGroupeAnalyseur : debut analyse')
         for analyseur in self.analyseurs:
-            elem_resultat, elem_position =  analyseur.analyse(data, position)
+            elem_resultat, elem_position = analyseur.analyse(data, position)
             if elem_resultat is not None:
                 logger.debug('cGroupeAnalyseur : fin analyse')
                 return elem_resultat, elem_position
@@ -132,26 +150,31 @@ class cGroupeAnalyseur():
             raise Exception('impossible de trouver %s' % str(analyseur))
         else:
             logger.debug('cGroupeAnalyseur : fin analyse')
-            return None, position        
-        
-analyseur_class = cListeAnalyseur((
-        cAnalyseur(C_RE_END, 'end'),
-    ))
-analyseur_types = cGroupeAnalyseur((cAnalyseur(C_RE_CLASS_DEB, 'class', p_fils=analyseur_class),
-                     cAnalyseur(C_RE_TYPE_PROC_FUNC, 'type_function'),
-                     cAnalyseur(C_RE_DECL_TYPE_SETOF, 'type_setof'),
-                     cAnalyseur(C_RE_DECL_TYPE, 'type_autre')))
+            return None, position
 
-analyseur_unit = cListeAnalyseur((cAnalyseur(C_RE_UNIT, 'unit'),
-                   cAnalyseur(C_RE_INTERFACE, 'interface'),
-                   cAnalyseur(C_RE_USES, 'uses', p_obligatoire=False),
-                   cRepeteurAnalyseur(
-                    cGroupeAnalyseur((cAnalyseur(C_RE_FUNCTION_DECL, 'function'),
-                                      cAnalyseur(C_RE_FUNCTION_DECL_S, 'function'),
-                                      cAnalyseur(C_RE_PROCEDURE_DECL, 'function'),
-                                      cAnalyseur(C_RE_PROCEDURE_DECL_S, 'function'),
-                                      cAnalyseur(C_RE_TYPES, 'section_type', p_fils=analyseur_types)),
-                                     p_obligatoire=False)),
-                   cAnalyseur(C_RE_IMPLEMENTATION, 'implementation'),
-                   cAnalyseur(C_RE_USES, 'uses', p_obligatoire=False),
-                   cAnalyseur(C_RE_END_FINAL, 'end_final')))
+
+analyseur_class = cListeAnalyseur((
+    cAnalyseur(C_RE_END, 'end'),
+))
+
+analyseur_types = cGroupeAnalyseur((
+    cAnalyseur(C_RE_CLASS_DEB, 'class', p_fils=analyseur_class),
+    cAnalyseur(C_RE_TYPE_PROC_FUNC, 'type_function'),
+    cAnalyseur(C_RE_DECL_TYPE_SETOF, 'type_setof'),
+    cAnalyseur(C_RE_DECL_TYPE, 'type_autre')))
+
+analyseur_unit = cListeAnalyseur((
+    cAnalyseur(C_RE_UNIT, 'unit'),
+    cAnalyseur(C_RE_INTERFACE, 'interface'),
+    cAnalyseur(C_RE_USES, 'uses', p_obligatoire=False),
+    cRepeteurAnalyseur(
+        cGroupeAnalyseur((
+            cAnalyseur(C_RE_FUNCTION_DECL, 'function'),
+            cAnalyseur(C_RE_FUNCTION_DECL_S, 'function'),
+            cAnalyseur(C_RE_PROCEDURE_DECL, 'function'),
+            cAnalyseur(C_RE_PROCEDURE_DECL_S, 'function'),
+            cAnalyseur(C_RE_TYPES, 'section_type', p_fils=analyseur_types)),
+            p_obligatoire=False)),
+    cAnalyseur(C_RE_IMPLEMENTATION, 'implementation'),
+    cAnalyseur(C_RE_USES, 'uses', p_obligatoire=False),
+    cAnalyseur(C_RE_END_FINAL, 'end_final')))
