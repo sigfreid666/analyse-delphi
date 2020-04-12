@@ -161,6 +161,25 @@ class cClasse(cType):
         for element in self.analyse.chercher(p_type='property'):
             self.symbols.ajouter(element.reconnu[0], cType(element.reconnu[1], '', None), self.data.genere_fils(element.debut, element.fin))
 
+        self.type_local = []
+        res = self.analyse.chercher(p_type='section_type') # on recherche que le premier niveau
+        if len(res) > 0:
+            for section_type in res:
+                self.type_local.append(cEnsembleType(self.data.genere_fils(section_type.debut, section_type.fin)))
+                for element in section_type.fils.chercher(p_type='class'):
+                    if element.reconnu[1].upper() == 'CLASS':
+                        self.type_local[-1].ajouter(cClasse(element.reconnu[0], element.reconnu[2], element.fils, self.data.genere_fils(element.debut, element.fin)))
+                    elif element.reconnu[1].upper() == 'RECORD':
+                        self.type_local[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin), p_type=cType.T_RECORD))
+                    elif element.reconnu[1].upper() == 'INTERFACE':
+                        self.type_local[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin), p_type=cType.T_INTERFACE))
+                    else:
+                        self.type_local[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin)))
+
+                for element in section_type.fils.chercher(p_type='type_function'):
+                    self.type_local[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin)))
+                for element in section_type.fils.chercher(p_type='type_autre'):
+                    self.type_local[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin)))
                     
     def __repr__(self):
         return '[CLA <%s> -> <%s> : %d fct]' % (self.nom, self.derivee, len(self.liste_fonction.keys()))

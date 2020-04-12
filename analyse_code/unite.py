@@ -69,7 +69,7 @@ class unite():
 
             self.liste_type_interface = resultat
 
-        res = self.analyse.chercher(p_type='function', recurse=False)
+        res = self.analyse.chercher(p_type='function')
         if len(res) > 0:
             for element in res:
                 self.symbols.ajouter(element.reconnu[0], cType('function', '', None), self.data.genere_fils(element.debut, element.fin))

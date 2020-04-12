@@ -35,8 +35,14 @@ class cGroupeResultat():
             else:
                 self.fils = None
 
+        def __repr__(self):
+            return '[RES<%s>]' % self.type
+
     def __init__(self):
         self.resultats = []
+
+    def __repr__(self):
+        return '[GRPRES<%d><%s>]' % (len(self.resultats), str.join(',',[str(x) for x in self.resultats ]))
 
     def ajouter(self, p_resultats):
         if type(p_resultats) == cGroupeResultat:
@@ -46,18 +52,25 @@ class cGroupeResultat():
             self.resultats.append(p_resultats)
         return self
 
-    def chercher(self, p_type='', p_nom='', recurse=True):
+    def chercher(self, p_type='', p_nom='', recurse=False):
         res = []
+        logger.debug('debut chercher type<%s>, nom<%s>', p_type, p_nom)
         for resultat in self.resultats:
+            logger.debug('recherche dans <%s>', resultat.type)
             if (p_type != '') and (resultat.type == p_type):
+                logger.debug('trouve pour ptype')
                 res.append(resultat)
             if (p_nom != '') and (resultat.type == p_nom):
+                logger.debug('trouve pour nom')
                 res.append(resultat)
             if recurse and (resultat.fils is not None):
                 if type(resultat.fils) == cGroupeResultat:
-                    for elem in resultat.fils.chercher(p_type=p_type, p_nom=p_nom):
+                    logger.debug('recherche dans les fils <%s>', resultat.fils)
+                    for elem in resultat.fils.chercher(p_type=p_type, p_nom=p_nom, recurse=recurse):
                         res.append(elem)
+                    logger.debug('fin de la recherche dans les fils')
                 else:
+                    logger.debug('recherche dans l''unique fils')
                     if (p_type != '') and (resultat.fils.type == p_type):
                         res.append(resultat.fils)
                     if (p_nom != '') and (resultat.fils.type == p_nom):
@@ -82,10 +95,12 @@ class cAnalyseur:
         pos = data._match_regex(self.re, position, -1)
         if pos is not None:
             if self.fils is not None:
+                logger.debug('debut analyse fils <%s>', str(type(self.fils)))
                 if inspect.isfunction(self.fils):
                     fils_resultat, position = self.fils().analyse(data, pos[1])
                 else:
                     fils_resultat, position = self.fils.analyse(data, pos[1])
+                logger.debug('fin analyse fils type<%s> <%s>', self.type, fils_resultat)
                 resultat = cGroupeResultat.cResultat(self.type, pos, fils_resultat)
             else:
                 resultat = cGroupeResultat.cResultat(self.type, pos, None)
