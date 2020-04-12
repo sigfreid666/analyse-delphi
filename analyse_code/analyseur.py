@@ -17,6 +17,7 @@ from .regex import C_RE_END_FINAL
 from .regex import C_RE_END
 from .regex import C_RE_VAR
 from .regex import C_RE_SECTION_CLASS
+from .regex import C_RE_PROPERTY
 
 
 class cGroupeResultat():
@@ -220,6 +221,7 @@ def analyseur_class():
                 cAnalyseur(C_RE_SECTION_CLASS, 'section_class', p_obligatoire=False),
                 cGroupeAnalyseur((
                     analyseur_type_function(analyseur_types),
+                    cAnalyseur(C_RE_PROPERTY, 'property'),
                     cAnalyseur(C_RE_VAR, 'menber')
                 ), p_obligatoire=False)
             ))

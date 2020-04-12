@@ -54,7 +54,7 @@ class unite():
                 resultat.append(cEnsembleType(self.data.genere_fils(section_type.debut, section_type.fin)))
                 for element in section_type.fils.chercher(p_type='class'):
                     if element.reconnu[1].upper() == 'CLASS':
-                        resultat[-1].ajouter(cClasse(element.reconnu[0], element.reconnu[2], self, self.data.genere_fils(element.debut, element.fin)))
+                        resultat[-1].ajouter(cClasse(element.reconnu[0], element.reconnu[2], element.fils, self.data.genere_fils(element.debut, element.fin)))
                     elif element.reconnu[1].upper() == 'RECORD':
                         resultat[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin), p_type=cType.T_RECORD))
                     elif element.reconnu[1].upper() == 'INTERFACE':
