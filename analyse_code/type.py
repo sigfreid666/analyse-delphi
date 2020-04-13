@@ -6,6 +6,7 @@ class cType:
     T_CLASS = 2
     T_RECORD = 3
     T_INTERFACE = 4
+    T_FUNCTION = 5
 
     def __init__(self, p_nom, p_definition, p_oData, p_type=T_SIMPLE):
         self.nom = p_nom
@@ -71,7 +72,7 @@ class cTableSymbol:
         for i_symbol in self.symbol:
             resultat += '\t%s <%d> ' % (i_symbol, len(self.symbol[i_symbol]))
             for elem in self.symbol[i_symbol]:
-                resultat += '<%s> ' % elem[0].nom
+                resultat += '<%s>' % elem[0]
             resultat += '\n'
         return resultat
 
@@ -122,28 +123,22 @@ class cFonctionImpl:
         return (position, self.pos_first_begin, self.pos_last_end, self.pos_var)
 
 
-class cFonction:
-    def __init__(self, nom, params, info_utilitaire):
-        super().__init__(*info_utilitaire)
+class cFonction(cType):
+    def __init__(self, nom, p_oResultatAnalyse, p_oData):
+        super().__init__(nom, '', p_oData, p_type=cType.T_FUNCTION)
         self.nom = nom
-        self.params = params
-        self.offset_decl_deb = info_utilitaire[2]
-        self.offset_decl_fin = info_utilitaire[3]
+        self.analyse = p_oResultatAnalyse
         self.parametres = []
-        self.offset_impl_deb = 0
-        self.offset_impl_fin = 0
         self.implementation = None
-
-        # analyse des parametres
-        # logger.debug('analyse des parametres')
-        # for param1 in self.params.split(';'):
-        #     logger.debug('param')
+        self.debut = self.analyse.debut
+        self.fin = self.analyse.fin
+        self.num_ligne = self.analyse.num_ligne
 
     def __repr__(self):
-        return '<%s,%d,%d>' % (self.nom, self.offset_decl_deb, self.offset_decl_fin)
+        return '<%s,%d,%d>' % (self.nom, self.debut, self.fin)
 
     def __str__(self):
-        chaine = 'FCT <%s> params <%d> offset <%d> <%d> ligne <%d>' % (self.nom, len(self.params), self.offset_decl_deb, self.offset_decl_fin, self.num_ligne(0))
+        chaine = 'FCT <%s> params <%d> offset <%d> <%d> ligne <%d>' % (self.nom, len(self.parametres), self.debut, self.fin, self.num_ligne)
         if self.implementation is not None:
             chaine += '\n\t' + str(self.implementation)
         return chaine
@@ -160,7 +155,11 @@ class cClasse(cType):
         self.liste_section = []
         logger.info('traitement de la classe %s', self.nom)
         for element in self.analyse.chercher(p_type='function'):
-            self.symbols.ajouter(element.reconnu[0], cType('function', '', None), self.data.genere_fils(element.debut, element.fin))
+            self.symbols.ajouter(element.reconnu[0],
+                                 cFonction(element.reconnu[0],
+                                           element,
+                                           self.data.genere_fils(element.debut, element.fin)),
+                                 self.data.genere_fils(element.debut, element.fin))
         for element in self.analyse.chercher(p_type='menber'):
             for nom in element.reconnu[0].split(','):
                 self.symbols.ajouter(nom.strip(' '), cType(element.reconnu[1], '', None), self.data.genere_fils(element.debut, element.fin))

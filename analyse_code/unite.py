@@ -3,7 +3,7 @@ from pathlib import Path
 from .log import logger
 from .data import cData
 from .uses import cUses
-from .type import cTableSymbol, cEnsembleType, cClasse, cType
+from .type import cTableSymbol, cEnsembleType, cClasse, cType, cFonction
 from .analyseur import analyseur_unit
 
 
@@ -34,9 +34,7 @@ class unite():
         if len(res) == 1:
             self.uses_implementation = cUses(res[0].reconnu[0])
 
-        self.liste_classe = []
         self.liste_section_interface = []
-        self.liste_fonction = []
         self.type_interface_pos = []
         self.liste_type_interface = []
         self.symbols = cTableSymbol()
@@ -67,7 +65,12 @@ class unite():
         res = self.analyse.chercher(p_type='function')
         if len(res) > 0:
             for element in res:
-                self.symbols.ajouter(element.reconnu[0], cType('function', '', None), self.data.genere_fils(element.debut, element.fin))
+                self.symbols.ajouter(element.reconnu[0],
+                                     cFonction(element.reconnu[0],
+                                               element,
+                                               self.data.genere_fils(element.debut, element.fin)),
+                                     self.data.genere_fils(element.debut, element.fin))
+        logger.info('fin creation unite : %s', str(self))
 
     def __str__(self):
         chaine = 'UNITE <%s> <%s> utilise par <%d>\n' % (self.nom, str(self.nom_fichier), len(self.liste_unite))
@@ -80,11 +83,6 @@ class unite():
         if self.uses_implementation is not None:
             chaine += '\t\t' + str(self.uses_implementation) + '\n'
         chaine += '\t%s\n' % str(self.symbols)
-
-        for iclass in self.liste_classe:
-            chaine += str(iclass)
-        for ifct in self.liste_fonction:
-            chaine += str(ifct)
         return chaine
 
     def num_ligne(self, position):
