@@ -42,7 +42,7 @@ class cGroupeResultat():
         self.resultats = []
 
     def __repr__(self):
-        return '[GRPRES<%d><%s>]' % (len(self.resultats), str.join(',',[str(x) for x in self.resultats ]))
+        return '[GRPRES<%d><%s>]' % (len(self.resultats), str.join(',', [str(x) for x in self.resultats]))
 
     def ajouter(self, p_resultats):
         if type(p_resultats) == cGroupeResultat:
@@ -228,6 +228,7 @@ def analyseur_types():
                 cAnalyseur(C_RE_DECL_TYPE, 'type_autre')
             ), p_obligatoire=False)
         )
+
 
 def analyseur_class():
     return cListeAnalyseur((

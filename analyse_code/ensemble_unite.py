@@ -2,8 +2,8 @@ import pickle
 import re
 from pathlib import Path
 
-from .log import *
-from .unite import *
+from .log import logger
+from .unite import unite
 
 
 class cEnsembleUnite:
@@ -26,9 +26,9 @@ class cEnsembleUnite:
         with self.nom_fichier.open(mode='wb') as f:
             pickle.dump(self.unites, f)
 
-
     def analyser_repertoire(self):
         logger.info('ensemble unite : %s', self.repertoire)
+
         def parcour(p_repertoire):
             for x in Path(p_repertoire).iterdir():
                 if (not x.is_dir()) and x.match('*.pas'):
@@ -40,7 +40,7 @@ class cEnsembleUnite:
 
     def analyser(self, avec_type_interface=False):
         for un in self.unites:
-            self.unites[un] = unite(un)   
+            self.unites[un] = unite(un)
             if avec_type_interface:
                 self.unites[un].analyse_type_interface()
             break
@@ -83,43 +83,43 @@ class cEnsembleUnite:
                 logger.info('Nombre de unit trouve : <%d>', unit_trouve)
 
     def check_uses(self):
-        for unite in self.unites:
-            if self.unites[unite].uses_interface is not None:
-                for uses in self.unites[unite].uses_interface.list_uses:
+        for iunite in self.unites:
+            if self.unites[iunite].uses_interface is not None:
+                for uses in self.unites[iunite].uses_interface.list_uses:
                     if uses not in self.unites:
-                        logger.error('impossible de trouve <%s> dans <%s>', uses, unite)
-            if self.unites[unite].uses_implementation is not None:
-                for uses in self.unites[unite].uses_implementation.list_uses:
+                        logger.error('impossible de trouve <%s> dans <%s>', uses, iunite)
+            if self.unites[iunite].uses_implementation is not None:
+                for uses in self.unites[iunite].uses_implementation.list_uses:
                     if uses not in self.unites:
-                        logger.error('impossible de trouve <%s> dans <%s>', uses, unite)
+                        logger.error('impossible de trouve <%s> dans <%s>', uses, iunite)
 
     def check_uses_non_utilise(self):
         stat = list(self.unites.keys())
-        for unite in self.unites:
-            logger.debug('unite %s', unite)
+        for iunite in self.unites:
+            logger.debug('unite %s', iunite)
             # if unite not in stat:
             #     continue
             logger.debug('on continue')
-            if self.unites[unite].uses_interface is not None:
-                for uses in self.unites[unite].uses_interface.list_uses:
+            if self.unites[iunite].uses_interface is not None:
+                for uses in self.unites[iunite].uses_interface.list_uses:
                     logger.debug('verif uses interface %s', uses)
                     if (uses.upper() in self.unites) and (uses.upper() in stat):
                         stat.remove(uses.upper())
-                        if unite not in self.unites[uses.upper()].liste_unite:
-                            self.unites[uses.upper()].liste_unite.append(unite)
+                        if iunite not in self.unites[uses.upper()].liste_unite:
+                            self.unites[uses.upper()].liste_unite.append(iunite)
                         logger.debug('remove %s', uses)
                     elif uses.upper() not in self.unites:
-                        logger.error('uses <%s> non trouve dans les unites dans le fichier <%s>', uses, unite)
-            if self.unites[unite].uses_implementation is not None:
-                for uses in self.unites[unite].uses_implementation.list_uses:
+                        logger.error('uses <%s> non trouve dans les unites dans le fichier <%s>', uses, iunite)
+            if self.unites[iunite].uses_implementation is not None:
+                for uses in self.unites[iunite].uses_implementation.list_uses:
                     logger.debug('verif uses implementation %s', uses)
                     if (uses.upper() in self.unites) and (uses.upper() in stat):
                         logger.debug('remove %s', uses)
                         stat.remove(uses.upper())
-                        if unite not in self.unites[uses.upper()].liste_unite:
-                            self.unites[uses.upper()].liste_unite.append(unite)
+                        if iunite not in self.unites[uses.upper()].liste_unite:
+                            self.unites[uses.upper()].liste_unite.append(iunite)
                     elif uses.upper() not in self.unites:
-                        logger.error('uses <%s> non trouve dans les unites dans le fichier <%s>', uses, unite)
+                        logger.error('uses <%s> non trouve dans les unites dans le fichier <%s>', uses, iunite)
         logger.info('check_uses_non_utilise : <%d> trouves, <%s>', len(stat), str(stat))
 
     def __str__(self):

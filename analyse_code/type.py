@@ -1,18 +1,21 @@
-from .log import *
-from .regex import *
+from .log import logger
+
 
 class cType:
     T_SIMPLE = 1
     T_CLASS = 2
     T_RECORD = 3
     T_INTERFACE = 4
+
     def __init__(self, p_nom, p_definition, p_oData, p_type=T_SIMPLE):
         self.nom = p_nom
         self.definition = p_definition
         self.data = p_oData
         self.type = p_type
+
     def __str__(self):
         return 'TYPE <%s> <%d>' % (self.nom, self.type)
+
 
 class cEnsembleType:
     def __init__(self, p_oData):
@@ -43,6 +46,7 @@ class cEnsembleType:
             resultat += '\n'
         return resultat
 
+
 class cTableSymbol:
     def __init__(self):
         self.symbol = {}
@@ -71,6 +75,7 @@ class cTableSymbol:
             resultat += '\n'
         return resultat
 
+
 class cFonctionImpl:
     def __init__(self, nom, info_utilitaire):
         super().__init__(*info_utilitaire)
@@ -82,7 +87,7 @@ class cFonctionImpl:
         logger.debug('Implementation fonction analyse : %s', self.data[:50])
         liste_begin_end = [(res_end_inter.groups()[0], res_end_inter.start(0)) for res_end_inter in re.finditer('(FUNCTION|TRY|CASE|PROCEDURE|VAR|BEGIN|END|TYPE)+', self.data)]
         self._analyse_begin_end(liste_begin_end)
-                   
+
     def __repr__(self):
         return '<%s,%d,%d,%d,%d>' % (self.nom, self.pos_var, self.pos_first_begin, self.pos_last_end, len(self.fct_local))
 
@@ -115,6 +120,7 @@ class cFonctionImpl:
             position += 1
         logger.debug('fin analyse : premier begin %d dernier end %d pos var %d', self.pos_first_begin, self.pos_last_end, self.pos_var)
         return (position, self.pos_first_begin, self.pos_last_end, self.pos_var)
+
 
 class cFonction:
     def __init__(self, nom, params, info_utilitaire):
@@ -162,7 +168,7 @@ class cClasse(cType):
             self.symbols.ajouter(element.reconnu[0], cType(element.reconnu[1], '', None), self.data.genere_fils(element.debut, element.fin))
 
         self.type_local = []
-        res = self.analyse.chercher(p_type='section_type') # on recherche que le premier niveau
+        res = self.analyse.chercher(p_type='section_type')  # on recherche que le premier niveau
         if len(res) > 0:
             for section_type in res:
                 self.type_local.append(cEnsembleType(self.data.genere_fils(section_type.debut, section_type.fin)))
@@ -180,14 +186,15 @@ class cClasse(cType):
                     self.type_local[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin)))
                 for element in section_type.fils.chercher(p_type='type_autre'):
                     self.type_local[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin)))
-                    
+
     def __repr__(self):
         return '[CLA <%s> -> <%s> : %d fct]' % (self.nom, self.derivee, len(self.liste_fonction.keys()))
+
     def __str__(self):
         chaine = self.__repr__() + '\n'
         chaine += '\tLigne debut : %d\n' % self.data.num_ligne(self.data.start_point)
         chaine += '\tLigne fin : %d\n' % self.data.num_ligne(self.data.end_point)
-        chaine += '\t'  + str(self.symbols)
+        chaine += '\t' + str(self.symbols)
         for fct in self.liste_fonction.values():
             chaine += str(fct) + '\n'
         return chaine

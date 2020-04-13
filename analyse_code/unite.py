@@ -1,15 +1,11 @@
-import re
-from pathlib import Path
 import codecs
-
-from .log import *
-from .gestion_multiligne import *
-from .data import *
-from .uses import *
-from .regex import *
-from .type import *
-
+from pathlib import Path
+from .log import logger
+from .data import cData
+from .uses import cUses
+from .type import cTableSymbol, cEnsembleType, cClasse, cType
 from .analyseur import analyseur_unit
+
 
 class unite():
     def __init__(self, nom_fichier):
@@ -24,8 +20,7 @@ class unite():
 
         logger.info('Analyse du fichier <%s>', str(self.nom_fichier))
         self.analyse = analyseur_unit.analyse(self.data)[0]
-        # self.pos_unite = self._find_unit()
-        self.nom = self.analyse.chercher(p_type='unit') # self.pos_unite[3][0]
+        self.nom = self.analyse.chercher(p_type='unit')  # self.pos_unite[3][0]
         if len(self.nom) > 0:
             self.nom = self.nom[0].reconnu[0]
             logger.info('nom unite trouve <%s>', self.nom)
@@ -48,7 +43,7 @@ class unite():
         self.liste_unite = []
 
         resultat = []
-        res = self.analyse.chercher(p_type='section_type', recurse=False) # on recherche que le premier niveau
+        res = self.analyse.chercher(p_type='section_type')
         if len(res) > 0:
             for section_type in res:
                 resultat.append(cEnsembleType(self.data.genere_fils(section_type.debut, section_type.fin)))
@@ -76,12 +71,12 @@ class unite():
 
     def __str__(self):
         chaine = 'UNITE <%s> <%s> utilise par <%d>\n' % (self.nom, str(self.nom_fichier), len(self.liste_unite))
-        chaine += '\tINTERFACE Ligne : %d\n' % self.gestion_ml.num_ligne(self.interface_pos[0])
+        chaine += '\tINTERFACE Ligne : %d\n' % self.analyse.chercher('interface')[0].num_ligne
         if self.uses_interface is not None:
             chaine += '\t\t' + str(self.uses_interface) + '\n'
         for t in self.liste_type_interface:
             chaine += '\t\t' + str(t) + '\n'
-        chaine += '\tIMPLEMENTATION cLigne : %d\n' % self.gestion_ml.num_ligne(self.implementation_pos[0])
+        chaine += '\tIMPLEMENTATION cLigne : %d\n' % self.analyse.chercher('implementation')[0].num_ligne
         if self.uses_implementation is not None:
             chaine += '\t\t' + str(self.uses_implementation) + '\n'
         chaine += '\t%s\n' % str(self.symbols)
