@@ -50,6 +50,6 @@ def test_func_avec_type(unit4):
     assert 'Func7' in unit4.symbols.symbol
     assert 'Func8' in unit4.symbols.symbol
     assert len(unit4.symbols.symbol['Proc8']) == 2
-    assert len(unit4.liste_type_interface[0].chercher('TClass1')) == 1 
-    assert len(unit4.liste_type_interface[1].chercher('TRecord')) == 1 
+    assert len(unit4.liste_type_interface.chercher('TClass1')) == 1 
+    assert len(unit4.liste_type_interface.chercher('TRecord')) == 1 
 

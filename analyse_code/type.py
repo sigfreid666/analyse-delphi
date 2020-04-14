@@ -19,9 +19,8 @@ class cType:
 
 
 class cEnsembleType:
-    def __init__(self, p_oData):
+    def __init__(self):
         self.types = {}
-        self.data = p_oData
 
     def ajouter(self, o_ctype):
         if o_ctype.nom in self.types:
@@ -39,7 +38,7 @@ class cEnsembleType:
             return []
 
     def __str__(self):
-        resultat = 'Ensemble type <%d> <%d>\n' % (self.data.start_point, self.data.end_point)
+        resultat = 'Ensemble type\n'
         for i_type in self.types:
             resultat += '\t%s <%d> ' % (i_type, len(self.types[i_type]))
             for elem in self.types[i_type]:
@@ -76,6 +75,17 @@ class cTableSymbol:
             resultat += '\n'
         return resultat
 
+
+class cSetOf(cType):
+    """class pour les type setof"""
+    def __init__(self, nom, p_oResultatAnalyse, p_oData):
+        super(cSetOf, self).__init__(nom, '', p_oData)
+        self.analyse = p_oResultatAnalyse
+        self.membre = [x.strip(' ()') for x in self.analyse.reconnu[1].split(',')]
+
+    def __repr__(self):
+        return '[SETOF <%s> element]' % len(self.membre)
+        
 
 class cFonctionImpl:
     def __init__(self, nom, info_utilitaire):
@@ -164,25 +174,7 @@ class cClasse(cType):
         for element in self.analyse.chercher(p_type='property'):
             self.symbols.ajouter(element.reconnu[0], cType(element.reconnu[1], '', None), self.data.genere_fils(element.debut, element.fin))
 
-        self.type_local = []
-        res = self.analyse.chercher(p_type='section_type')  # on recherche que le premier niveau
-        if len(res) > 0:
-            for section_type in res:
-                self.type_local.append(cEnsembleType(self.data.genere_fils(section_type.debut, section_type.fin)))
-                for element in section_type.fils.chercher(p_type='class'):
-                    if element.reconnu[1].upper() == 'CLASS':
-                        self.type_local[-1].ajouter(cClasse(element.reconnu[0], element.reconnu[2], element.fils, self.data.genere_fils(element.debut, element.fin)))
-                    elif element.reconnu[1].upper() == 'RECORD':
-                        self.type_local[-1].ajouter(cRecord(element.reconnu[0], element.fils, self.data.genere_fils(element.debut, element.fin)))
-                    elif element.reconnu[1].upper() == 'INTERFACE':
-                        self.type_local[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin), p_type=cType.T_INTERFACE))
-                    else:
-                        self.type_local[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin)))
-
-                for element in section_type.fils.chercher(p_type='type_function'):
-                    self.type_local[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin)))
-                for element in section_type.fils.chercher(p_type='type_autre'):
-                    self.type_local[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin)))
+        self.type_local = genere_ensemble_type_par_groupe_resultat(self.analyse, self.data)
 
     def __repr__(self):
         return '[CLA <%s> -> <%s>]' % (self.nom, self.derivee)
@@ -192,6 +184,7 @@ class cClasse(cType):
         chaine += '\tLigne debut : %d\n' % self.data.num_ligne(self.data.start_point)
         chaine += '\tLigne fin : %d\n' % self.data.num_ligne(self.data.end_point)
         chaine += '\t' + str(self.symbols)
+        chaine += '\tType locaux:' + str(self.type_local)
         return chaine
 
 class cRecord(cClasse):
@@ -202,3 +195,27 @@ class cRecord(cClasse):
         
     def __repr__(self):
         return '[RCD <%s> ]' % (self.nom)
+
+
+def genere_ensemble_type_par_groupe_resultat(groupe_resultat, data):
+    ensemble_type = cEnsembleType()
+    res = groupe_resultat.chercher(p_type='section_type')
+    if len(res) > 0:
+        for section_type in res:
+            for element in section_type.fils.chercher(p_type='class'):
+                if element.reconnu[1].upper() == 'CLASS':
+                    ensemble_type.ajouter(cClasse(element.reconnu[0], element.reconnu[2], element.fils, data.genere_fils(element.debut, element.fin)))
+                elif element.reconnu[1].upper() == 'RECORD':
+                    ensemble_type.ajouter(cRecord(element.reconnu[0], element.fils, data.genere_fils(element.debut, element.fin)))
+                elif element.reconnu[1].upper() == 'INTERFACE':
+                    ensemble_type.ajouter(cType(element.reconnu[0], '', data.genere_fils(element.debut, element.fin), p_type=cType.T_INTERFACE))
+                else:
+                    ensemble_type.ajouter(cType(element.reconnu[0], '', data.genere_fils(element.debut, element.fin)))
+
+            for element in section_type.fils.chercher(p_type='type_function'):
+                ensemble_type.ajouter(cType(element.reconnu[0], '', data.genere_fils(element.debut, element.fin)))
+            for element in section_type.fils.chercher(p_type='type_setof'):
+                ensemble_type.ajouter(cSetOf(element.reconnu[0], element, data.genere_fils(element.debut, element.fin)))
+            for element in section_type.fils.chercher(p_type='type_autre'):
+                ensemble_type.ajouter(cType(element.reconnu[0], '', data.genere_fils(element.debut, element.fin)))
+    return ensemble_type
