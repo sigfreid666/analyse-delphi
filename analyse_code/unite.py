@@ -3,7 +3,8 @@ from pathlib import Path
 from .log import logger
 from .data import cData
 from .uses import cUses
-from .type import cTableSymbol, cEnsembleType, cClasse, cType, cFonction
+from .type import cTableSymbol, cEnsembleType, cClasse
+from .type import cType, cFonction, cRecord
 from .analyseur import analyseur_unit
 
 
@@ -49,7 +50,7 @@ class unite():
                     if element.reconnu[1].upper() == 'CLASS':
                         resultat[-1].ajouter(cClasse(element.reconnu[0], element.reconnu[2], element.fils, self.data.genere_fils(element.debut, element.fin)))
                     elif element.reconnu[1].upper() == 'RECORD':
-                        resultat[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin), p_type=cType.T_RECORD))
+                        resultat[-1].ajouter(cRecord(element.reconnu[0], element.fils, self.data.genere_fils(element.debut, element.fin)))
                     elif element.reconnu[1].upper() == 'INTERFACE':
                         resultat[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin), p_type=cType.T_INTERFACE))
                     else:

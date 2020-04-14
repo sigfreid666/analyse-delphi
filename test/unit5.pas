@@ -2,7 +2,7 @@ unit unit5;
 
 interface
     type
-        tclasse1 = class
+        tclasse1 = class(maderivee)
             procedure maproc1();
             procedure maproc2(aparam1 : integer);
             mavar1 : string;

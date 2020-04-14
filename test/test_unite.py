@@ -35,7 +35,7 @@ def test_unite_classe2(unit2):
     assert unit2.liste_type_interface is not None
     assert len(unit2.liste_type_interface[0].chercher('Classe2')) == 1 
     oClasse2 = unit2.liste_type_interface[0].chercher('Classe2')[0]
-    assert oClasse2.derivee == '(Classe1)' 
+    assert oClasse2.derivee == 'Classe1' 
 
 def test_unite_type_simple(unit2):
     assert unit2.liste_type_interface is not None

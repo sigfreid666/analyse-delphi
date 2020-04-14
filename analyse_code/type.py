@@ -149,10 +149,8 @@ class cClasse(cType):
         super().__init__(nom, '', p_oData, p_type=cType.T_CLASS)
         self.analyse = p_oResultatAnalyse
         self.derivee = derivee
-        self.liste_fonction = {}
         self.type_local = []
         self.symbols = cTableSymbol()
-        self.liste_section = []
         logger.info('traitement de la classe %s', self.nom)
         for element in self.analyse.chercher(p_type='function'):
             self.symbols.ajouter(element.reconnu[0],
@@ -175,7 +173,7 @@ class cClasse(cType):
                     if element.reconnu[1].upper() == 'CLASS':
                         self.type_local[-1].ajouter(cClasse(element.reconnu[0], element.reconnu[2], element.fils, self.data.genere_fils(element.debut, element.fin)))
                     elif element.reconnu[1].upper() == 'RECORD':
-                        self.type_local[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin), p_type=cType.T_RECORD))
+                        self.type_local[-1].ajouter(cRecord(element.reconnu[0], element.fils, self.data.genere_fils(element.debut, element.fin)))
                     elif element.reconnu[1].upper() == 'INTERFACE':
                         self.type_local[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin), p_type=cType.T_INTERFACE))
                     else:
@@ -187,13 +185,20 @@ class cClasse(cType):
                     self.type_local[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin)))
 
     def __repr__(self):
-        return '[CLA <%s> -> <%s> : %d fct]' % (self.nom, self.derivee, len(self.liste_fonction.keys()))
+        return '[CLA <%s> -> <%s>]' % (self.nom, self.derivee)
 
     def __str__(self):
         chaine = self.__repr__() + '\n'
         chaine += '\tLigne debut : %d\n' % self.data.num_ligne(self.data.start_point)
         chaine += '\tLigne fin : %d\n' % self.data.num_ligne(self.data.end_point)
         chaine += '\t' + str(self.symbols)
-        for fct in self.liste_fonction.values():
-            chaine += str(fct) + '\n'
         return chaine
+
+class cRecord(cClasse):
+    """type Record"""
+    def __init__(self, nom, p_oResultatAnalyse, p_oData):
+        super(cRecord, self).__init__(nom, '', p_oResultatAnalyse, p_oData)
+        self.type = cType.T_RECORD
+        
+    def __repr__(self):
+        return '[RCD <%s> ]' % (self.nom)
