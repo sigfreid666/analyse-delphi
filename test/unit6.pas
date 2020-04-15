@@ -6,6 +6,7 @@ interface
         const
             const1 = 1;
             const2 = 2;
+            const3 : integer = 3;
         private
             procedure maproc1();
             procedure maproc2(aparam1 : integer);
