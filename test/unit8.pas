@@ -11,6 +11,10 @@ interface
         myconst1 = 12;
         myconst2 = 'test';
 
+    resourcestring
+        res1 = '12';
+        res2 = 'test';
+
 implementation
 
     uses

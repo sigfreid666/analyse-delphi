@@ -19,6 +19,7 @@ from .regex import C_RE_VAR
 from .regex import C_RE_SECTION_CLASS
 from .regex import C_RE_PROPERTY
 from .regex import C_RE_SECTION_CONST, C_RE_DEF_CONST
+from .regex import C_RE_SECTION_RESOURCE, C_RE_DEF_RESOURCE
 
 
 class cGroupeResultat():
@@ -84,6 +85,10 @@ class ExceptionAnalyseurObligatoire(Exception):
         # super().__init('impossible de trouver l''analyseur de type <%s>' % analyseur.type)
         self.analyseur = analyseur
 
+
+class ExceptionAnalyseurStop(Exception):
+    pass
+
 class cAnalyseur:
     """Analyseur simple"""
     def __init__(self, p_re, p_type, p_fils=None, p_obligatoire=True):
@@ -121,6 +126,29 @@ class cAnalyseur:
     def __str__(self):
         return '[re <%s> type<%s> fils<%s> obl<%s>]' % (self.re, self.type, str(self.fils), str(self.obligatoire))
 
+
+class cAnalyseurStop:
+    """Analyseur pour sortir d'une iteration"""
+    def __init__(self, p_re):
+        self.re = p_re
+
+    def analyse(self, data, position=0):
+        logger.debug('debut analyse stop')
+        resultat = None
+        pos_espace = data._match_regex(r'\s+', position, -1)
+        if pos_espace is not None:
+            position = pos_espace[1]
+        pos = data._match_regex(self.re, position, -1)
+        if pos is not None:
+            logger.debug('trouve fin')
+            raise ExceptionAnalyseurStop()
+        return None, position
+
+    def __repr__(self):
+        return 'cAnalyseurStop'
+
+    def __str__(self):
+        return '[STOP re <%s>]' % self.re
 
 class cAnalyseurZone:
     """Analyseur de zone, analyse d'un point de départ jusqu'à une regex, permet de sauter des zones
@@ -163,7 +191,7 @@ class cRepeteurAnalyseur:
             try:
                 elem_resultat, elem_position = self.analyseur.analyse(data, position)
             # dans un repeteur on doit avoir au moins un analyseur obligatoire de reconnu
-            except ExceptionAnalyseurObligatoire as e:
+            except (ExceptionAnalyseurStop, ExceptionAnalyseurObligatoire):
                 elem_resultat = None
                 elem_position = position
         if elem_resultat is not None:
@@ -218,7 +246,17 @@ class cGroupeAnalyseur():
             return None, position
 
 analyseur_section_const = cRepeteurAnalyseur(
-        cAnalyseur(C_RE_DEF_CONST, 'const')
+        cGroupeAnalyseur((
+            cAnalyseurStop(C_RE_SECTION_RESOURCE),
+            cAnalyseur(C_RE_DEF_CONST, 'const'),
+        ))
+    )
+
+analyseur_section_resource = cRepeteurAnalyseur(
+        cGroupeAnalyseur((
+            cAnalyseurStop(C_RE_IMPLEMENTATION),
+            cAnalyseur(C_RE_DEF_RESOURCE, 'resource'),
+        ))
     )
 
 def analyseur_type_function(func_analyseur_type):
@@ -229,7 +267,8 @@ def analyseur_type_function(func_analyseur_type):
             cAnalyseur(C_RE_FUNCTION_DECL_S, 'function'),
             cAnalyseur(C_RE_PROCEDURE_DECL, 'function'),
             cAnalyseur(C_RE_PROCEDURE_DECL_S, 'function'),
-            cAnalyseur(C_RE_SECTION_CONST, 'section_const', p_fils=analyseur_section_const)),
+            cAnalyseur(C_RE_SECTION_CONST, 'section_const', p_fils=analyseur_section_const),
+            cAnalyseur(C_RE_SECTION_RESOURCE, 'section_resource', p_fils=analyseur_section_resource)),
             p_obligatoire=False))
 
 

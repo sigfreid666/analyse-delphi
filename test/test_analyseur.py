@@ -60,3 +60,10 @@ def test_const(data):
     assert data is not None
     assert len(data.chercher(p_type='section_const')) == 1
     assert len(data.chercher(p_type='const', recurse=True)) == 2
+
+def test_resource(data):
+    data = data('./test/unit8.pas')
+    data = analyse_code.analyseur_unit.analyse(data)[0]
+    assert data is not None
+    assert len(data.chercher(p_type='section_resource')) == 1
+    assert len(data.chercher(p_type='resource', recurse=True)) == 2
