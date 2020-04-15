@@ -53,3 +53,10 @@ def test_func5(data):
     assert len(data.chercher(p_type='function')) == 0
     assert len(data.chercher(p_type='section_type')) == 0
     assert len(data.chercher(p_type='class')) == 0
+
+def test_const(data):
+    data = data('./test/unit8.pas')
+    data = analyse_code.analyseur_unit.analyse(data)[0]
+    assert data is not None
+    assert len(data.chercher(p_type='section_const')) == 1
+    assert len(data.chercher(p_type='const', recurse=True)) == 2

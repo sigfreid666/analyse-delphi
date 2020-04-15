@@ -18,6 +18,7 @@ from .regex import C_RE_END
 from .regex import C_RE_VAR
 from .regex import C_RE_SECTION_CLASS
 from .regex import C_RE_PROPERTY
+from .regex import C_RE_SECTION_CONST, C_RE_DEF_CONST
 
 
 class cGroupeResultat():
@@ -78,6 +79,11 @@ class cGroupeResultat():
         return res
 
 
+class ExceptionAnalyseurObligatoire(Exception):
+    def __init__(self, analyseur):
+        # super().__init('impossible de trouver l''analyseur de type <%s>' % analyseur.type)
+        self.analyseur = analyseur
+
 class cAnalyseur:
     """Analyseur simple"""
     def __init__(self, p_re, p_type, p_fils=None, p_obligatoire=True):
@@ -106,7 +112,7 @@ class cAnalyseur:
                 resultat = cGroupeResultat.cResultat(self.type, pos, None)
                 position = pos[1]
         elif self.obligatoire:
-            raise Exception('impossible de trouver %s' % str(self))
+            raise ExceptionAnalyseurObligatoire('impossible de trouver %s' % str(self))
         return resultat, position
 
     def __repr__(self):
@@ -154,7 +160,12 @@ class cRepeteurAnalyseur:
         while elem_resultat is not None:
             position = elem_position
             resultat.ajouter(elem_resultat)
-            elem_resultat, elem_position = self.analyseur.analyse(data, position)
+            try:
+                elem_resultat, elem_position = self.analyseur.analyse(data, position)
+            # dans un repeteur on doit avoir au moins un analyseur obligatoire de reconnu
+            except ExceptionAnalyseurObligatoire as e:
+                elem_resultat = None
+                elem_position = position
         if elem_resultat is not None:
             position = elem_position
             resultat.ajouter(elem_resultat)
@@ -206,6 +217,9 @@ class cGroupeAnalyseur():
             logger.debug('cGroupeAnalyseur : fin analyse')
             return None, position
 
+analyseur_section_const = cRepeteurAnalyseur(
+        cAnalyseur(C_RE_DEF_CONST, 'const')
+    )
 
 def analyseur_type_function(func_analyseur_type):
     return cRepeteurAnalyseur(
@@ -214,7 +228,8 @@ def analyseur_type_function(func_analyseur_type):
             cAnalyseur(C_RE_FUNCTION_DECL, 'function'),
             cAnalyseur(C_RE_FUNCTION_DECL_S, 'function'),
             cAnalyseur(C_RE_PROCEDURE_DECL, 'function'),
-            cAnalyseur(C_RE_PROCEDURE_DECL_S, 'function')),
+            cAnalyseur(C_RE_PROCEDURE_DECL_S, 'function'),
+            cAnalyseur(C_RE_SECTION_CONST, 'section_const', p_fils=analyseur_section_const)),
             p_obligatoire=False))
 
 

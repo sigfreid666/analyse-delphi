@@ -7,6 +7,7 @@ class cType:
     T_RECORD = 3
     T_INTERFACE = 4
     T_FUNCTION = 5
+    T_CONST = 6
 
     def __init__(self, p_nom, p_definition, p_oData, p_type=T_SIMPLE):
         self.nom = p_nom
@@ -174,6 +175,13 @@ class cClasse(cType):
         for element in self.analyse.chercher(p_type='property'):
             self.symbols.ajouter(element.reconnu[0], cType(element.reconnu[1], '', None), self.data.genere_fils(element.debut, element.fin))
 
+        for section_const in self.analyse.chercher(p_type='section_const'):
+            for element in section_const.fils.chercher(p_type='const'):
+                self.symbols.ajouter(element.reconnu[0],
+                                     cType('const', element.reconnu[1],
+                                           self.data.genere_fils(element.debut, element.fin),
+                                           p_type=cType.T_CONST),
+                                     self.data.genere_fils(element.debut, element.fin))
         self.type_local = genere_ensemble_type_par_groupe_resultat(self.analyse, self.data)
 
     def __repr__(self):

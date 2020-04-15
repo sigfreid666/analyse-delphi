@@ -11,6 +11,12 @@ def unit2():
     unit = analyse_code.unite('./test/unit2.pas')
     # unit.analyse_type_interface()
     return unit
+
+@pytest.fixture
+def unit():
+    def _make_unit(nom_fichier):
+        return analyse_code.unite(nom_fichier)
+    return _make_unit
     
 def test_unite_analyse(unit1):
     assert unit1 is not None
@@ -67,3 +73,9 @@ def test_setof(unit2):
     assert len(lsetof) == 1
     lsetof = lsetof[0]  
     assert lsetof.membre == ['premier', 'deuxieme']
+
+def test_const(unit):
+    unit = unit('./test/unit8.pas')
+    assert unit is not None
+    assert len(unit.symbols.chercher('myconst1')) == 1
+    assert len(unit.symbols.chercher('myconst2')) == 1

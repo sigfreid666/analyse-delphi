@@ -46,6 +46,8 @@ def test_classe_dans_classe(unit):
     assert len(classe.type_local.chercher('tclasse2')) == 1 
     classe2 =  classe.type_local.chercher('tclasse2')[0] 
     assert len(classe2.symbols.chercher('mafunc4')) == 1 
+    assert len(classe.symbols.chercher('const1')) == 1
+    assert len(classe.symbols.chercher('const2')) == 1
 
 def test_record1(unit):
     unit = unit('./test/unit7.pas')

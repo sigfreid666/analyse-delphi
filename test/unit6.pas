@@ -3,6 +3,9 @@ unit unit5;
 interface
     type
         tclasse1 = class
+        const
+            const1 = 1;
+            const2 = 2;
         private
             procedure maproc1();
             procedure maproc2(aparam1 : integer);

@@ -52,6 +52,13 @@ class unite():
                                                element,
                                                self.data.genere_fils(element.debut, element.fin)),
                                      self.data.genere_fils(element.debut, element.fin))
+        for section_const in self.analyse.chercher(p_type='section_const'):
+            for element in section_const.fils.chercher(p_type='const'):
+                self.symbols.ajouter(element.reconnu[0],
+                                     cType('const', element.reconnu[1],
+                                           self.data.genere_fils(element.debut, element.fin),
+                                           p_type=cType.T_CONST),
+                                     self.data.genere_fils(element.debut, element.fin))
         logger.info('fin creation unite : %s', str(self))
 
     def __str__(self):
