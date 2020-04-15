@@ -43,6 +43,7 @@ interface
         TProcFBSP = FUNCTION () OF OBJECT;
         TProcPSP = PROCEDURE ();
         TProcFSP = FUNCTION ();
+        TSetof1 = set of (premier, deuxieme);
 
 implementation
 
