@@ -1,5 +1,6 @@
 import pytest
 import analyse_code
+from analyse_code.type import cInterface
 
 @pytest.fixture
 def unit1():
@@ -27,35 +28,42 @@ def test_unite_uses(unit1):
 
 def test_unite_classe1(unit2):
     assert unit2.liste_type_interface is not None
-    assert len(unit2.liste_type_interface) == 1 
-    assert len(unit2.liste_type_interface[0].chercher('Classe1')) == 1 
-    assert len(unit2.liste_type_interface[0].chercher('Classe1',cat_type=analyse_code.cType.T_CLASS)) == 1 
+    assert len(unit2.liste_type_interface.chercher('Classe1')) == 1 
+    assert len(unit2.liste_type_interface.chercher('Classe1',cat_type=analyse_code.cType.T_CLASS)) == 1 
 
 def test_unite_classe2(unit2):
     assert unit2.liste_type_interface is not None
-    assert len(unit2.liste_type_interface[0].chercher('Classe2')) == 1 
-    oClasse2 = unit2.liste_type_interface[0].chercher('Classe2')[0]
-    assert oClasse2.derivee == '(Classe1)' 
+    assert len(unit2.liste_type_interface.chercher('Classe2')) == 1 
+    oClasse2 = unit2.liste_type_interface.chercher('Classe2')[0]
+    assert oClasse2.derivee == 'Classe1' 
 
 def test_unite_type_simple(unit2):
     assert unit2.liste_type_interface is not None
-    assert len(unit2.liste_type_interface[0].chercher('TArrayBlabla',cat_type=analyse_code.cType.T_SIMPLE)) == 1 
+    assert len(unit2.liste_type_interface.chercher('TArrayBlabla',cat_type=analyse_code.cType.T_SIMPLE)) == 1 
 
 def test_unite_type_proc_func(unit2):
     assert unit2.liste_type_interface is not None
-    assert len(unit2.liste_type_interface[0].chercher('TProcPB',cat_type=analyse_code.cType.T_SIMPLE)) == 1 
-    assert len(unit2.liste_type_interface[0].chercher('TProcFB',cat_type=analyse_code.cType.T_SIMPLE)) == 1 
-    assert len(unit2.liste_type_interface[0].chercher('TProcP',cat_type=analyse_code.cType.T_SIMPLE)) == 1 
-    assert len(unit2.liste_type_interface[0].chercher('TProcF',cat_type=analyse_code.cType.T_SIMPLE)) == 1 
-    assert len(unit2.liste_type_interface[0].chercher('TProcPBSP',cat_type=analyse_code.cType.T_SIMPLE)) == 1 
-    assert len(unit2.liste_type_interface[0].chercher('TProcFBSP',cat_type=analyse_code.cType.T_SIMPLE)) == 1 
-    assert len(unit2.liste_type_interface[0].chercher('TProcPSP',cat_type=analyse_code.cType.T_SIMPLE)) == 1 
-    assert len(unit2.liste_type_interface[0].chercher('TProcFSP',cat_type=analyse_code.cType.T_SIMPLE)) == 1 
+    assert len(unit2.liste_type_interface.chercher('TProcPB',cat_type=analyse_code.cType.T_SIMPLE)) == 1 
+    assert len(unit2.liste_type_interface.chercher('TProcFB',cat_type=analyse_code.cType.T_SIMPLE)) == 1 
+    assert len(unit2.liste_type_interface.chercher('TProcP',cat_type=analyse_code.cType.T_SIMPLE)) == 1 
+    assert len(unit2.liste_type_interface.chercher('TProcF',cat_type=analyse_code.cType.T_SIMPLE)) == 1 
+    assert len(unit2.liste_type_interface.chercher('TProcPBSP',cat_type=analyse_code.cType.T_SIMPLE)) == 1 
+    assert len(unit2.liste_type_interface.chercher('TProcFBSP',cat_type=analyse_code.cType.T_SIMPLE)) == 1 
+    assert len(unit2.liste_type_interface.chercher('TProcPSP',cat_type=analyse_code.cType.T_SIMPLE)) == 1 
+    assert len(unit2.liste_type_interface.chercher('TProcFSP',cat_type=analyse_code.cType.T_SIMPLE)) == 1 
 
 def test_unite_record(unit2):
     assert unit2.liste_type_interface is not None
-    assert len(unit2.liste_type_interface[0].chercher('Record1',cat_type=analyse_code.cType.T_RECORD)) == 1 
+    assert len(unit2.liste_type_interface.chercher('Record1',cat_type=analyse_code.cType.T_RECORD)) == 1 
 
 def test_unite_interface(unit2):
     assert unit2.liste_type_interface is not None
-    assert len(unit2.liste_type_interface[0].chercher('Interface1',cat_type=analyse_code.cType.T_INTERFACE)) == 1 
+    assert len(unit2.liste_type_interface.chercher('Interface1',cat_type=analyse_code.cType.T_INTERFACE)) == 1 
+    assert type(unit2.liste_type_interface.chercher('Interface1')[0]) == cInterface
+
+def test_setof(unit2):
+    assert unit2.liste_type_interface is not None
+    lsetof = unit2.liste_type_interface.chercher('TSetof1')
+    assert len(lsetof) == 1
+    lsetof = lsetof[0]  
+    assert lsetof.membre == ['premier', 'deuxieme']

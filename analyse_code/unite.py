@@ -3,7 +3,9 @@ from pathlib import Path
 from .log import logger
 from .data import cData
 from .uses import cUses
-from .type import cTableSymbol, cEnsembleType, cClasse, cType
+from .type import cTableSymbol, cEnsembleType, cClasse
+from .type import cType, cFonction, cRecord
+from .type import genere_ensemble_type_par_groupe_resultat
 from .analyseur import analyseur_unit
 
 
@@ -34,57 +36,34 @@ class unite():
         if len(res) == 1:
             self.uses_implementation = cUses(res[0].reconnu[0])
 
-        self.liste_classe = []
         self.liste_section_interface = []
-        self.liste_fonction = []
         self.type_interface_pos = []
         self.liste_type_interface = []
         self.symbols = cTableSymbol()
         self.liste_unite = []
 
-        resultat = []
-        res = self.analyse.chercher(p_type='section_type')
-        if len(res) > 0:
-            for section_type in res:
-                resultat.append(cEnsembleType(self.data.genere_fils(section_type.debut, section_type.fin)))
-                for element in section_type.fils.chercher(p_type='class'):
-                    if element.reconnu[1].upper() == 'CLASS':
-                        resultat[-1].ajouter(cClasse(element.reconnu[0], element.reconnu[2], element.fils, self.data.genere_fils(element.debut, element.fin)))
-                    elif element.reconnu[1].upper() == 'RECORD':
-                        resultat[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin), p_type=cType.T_RECORD))
-                    elif element.reconnu[1].upper() == 'INTERFACE':
-                        resultat[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin), p_type=cType.T_INTERFACE))
-                    else:
-                        resultat[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin)))
-
-                for element in section_type.fils.chercher(p_type='type_function'):
-                    resultat[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin)))
-                for element in section_type.fils.chercher(p_type='type_autre'):
-                    resultat[-1].ajouter(cType(element.reconnu[0], '', self.data.genere_fils(element.debut, element.fin)))
-
-            self.liste_type_interface = resultat
+        self.liste_type_interface = genere_ensemble_type_par_groupe_resultat(self.analyse, self.data)
 
         res = self.analyse.chercher(p_type='function')
         if len(res) > 0:
             for element in res:
-                self.symbols.ajouter(element.reconnu[0], cType('function', '', None), self.data.genere_fils(element.debut, element.fin))
+                self.symbols.ajouter(element.reconnu[0],
+                                     cFonction(element.reconnu[0],
+                                               element,
+                                               self.data.genere_fils(element.debut, element.fin)),
+                                     self.data.genere_fils(element.debut, element.fin))
+        logger.info('fin creation unite : %s', str(self))
 
     def __str__(self):
         chaine = 'UNITE <%s> <%s> utilise par <%d>\n' % (self.nom, str(self.nom_fichier), len(self.liste_unite))
         chaine += '\tINTERFACE Ligne : %d\n' % self.analyse.chercher('interface')[0].num_ligne
         if self.uses_interface is not None:
             chaine += '\t\t' + str(self.uses_interface) + '\n'
-        for t in self.liste_type_interface:
-            chaine += '\t\t' + str(t) + '\n'
+        chaine += '\t\t' + str(self.liste_type_interface) + '\n'
         chaine += '\tIMPLEMENTATION cLigne : %d\n' % self.analyse.chercher('implementation')[0].num_ligne
         if self.uses_implementation is not None:
             chaine += '\t\t' + str(self.uses_implementation) + '\n'
         chaine += '\t%s\n' % str(self.symbols)
-
-        for iclass in self.liste_classe:
-            chaine += str(iclass)
-        for ifct in self.liste_fonction:
-            chaine += str(ifct)
         return chaine
 
     def num_ligne(self, position):

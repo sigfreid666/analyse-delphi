@@ -1,8 +1,8 @@
-unit unit5;
+unit unit7;
 
 interface
     type
-        tclasse1 = class(maderivee)
+        trecord1 = record
             procedure maproc1();
             procedure maproc2(aparam1 : integer);
             mavar1 : string;
