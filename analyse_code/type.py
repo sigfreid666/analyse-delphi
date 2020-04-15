@@ -197,6 +197,16 @@ class cRecord(cClasse):
         return '[RCD <%s> ]' % (self.nom)
 
 
+class cInterface(cClasse):
+    """type Record"""
+    def __init__(self, nom, p_oResultatAnalyse, p_oData):
+        super(cInterface, self).__init__(nom, '', p_oResultatAnalyse, p_oData)
+        self.type = cType.T_INTERFACE
+        
+    def __repr__(self):
+        return '[INTER <%s> ]' % (self.nom)
+
+
 def genere_ensemble_type_par_groupe_resultat(groupe_resultat, data):
     ensemble_type = cEnsembleType()
     res = groupe_resultat.chercher(p_type='section_type')
@@ -208,9 +218,9 @@ def genere_ensemble_type_par_groupe_resultat(groupe_resultat, data):
                 elif element.reconnu[1].upper() == 'RECORD':
                     ensemble_type.ajouter(cRecord(element.reconnu[0], element.fils, data.genere_fils(element.debut, element.fin)))
                 elif element.reconnu[1].upper() == 'INTERFACE':
-                    ensemble_type.ajouter(cType(element.reconnu[0], '', data.genere_fils(element.debut, element.fin), p_type=cType.T_INTERFACE))
+                    ensemble_type.ajouter(cInterface(element.reconnu[0], element.fils, data.genere_fils(element.debut, element.fin)))
                 else:
-                    ensemble_type.ajouter(cType(element.reconnu[0], '', data.genere_fils(element.debut, element.fin)))
+                    raise Exception('type de classe non reconnu')
 
             for element in section_type.fils.chercher(p_type='type_function'):
                 ensemble_type.ajouter(cType(element.reconnu[0], '', data.genere_fils(element.debut, element.fin)))

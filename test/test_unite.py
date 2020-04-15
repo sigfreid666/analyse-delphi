@@ -1,5 +1,6 @@
 import pytest
 import analyse_code
+from analyse_code.type import cInterface
 
 @pytest.fixture
 def unit1():
@@ -58,6 +59,7 @@ def test_unite_record(unit2):
 def test_unite_interface(unit2):
     assert unit2.liste_type_interface is not None
     assert len(unit2.liste_type_interface.chercher('Interface1',cat_type=analyse_code.cType.T_INTERFACE)) == 1 
+    assert type(unit2.liste_type_interface.chercher('Interface1')[0]) == cInterface
 
 def test_setof(unit2):
     assert unit2.liste_type_interface is not None
