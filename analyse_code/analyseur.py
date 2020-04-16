@@ -21,6 +21,7 @@ from .regex import C_RE_PROPERTY
 from .regex import C_RE_SECTION_CONST, C_RE_DEF_CONST
 from .regex import C_RE_SECTION_RESOURCE, C_RE_DEF_RESOURCE
 from .regex import C_RE_SECTION
+from .regex import C_RE_GUID
 
 class cGroupeResultat():
     """Ensemble des resultats d'une analyse"""
@@ -267,6 +268,7 @@ def analyseur_class():
     return cListeAnalyseur((
         cRepeteurAnalyseur(
             cListeAnalyseur((
+                cAnalyseur(C_RE_GUID, 'guid', p_obligatoire=False),
                 cAnalyseur(C_RE_SECTION_CLASS, 'section_class', p_obligatoire=False),
                 cGroupeAnalyseur((
                     analyseur_type_function(analyseur_types),
