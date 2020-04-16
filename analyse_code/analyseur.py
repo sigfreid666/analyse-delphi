@@ -20,7 +20,7 @@ from .regex import C_RE_SECTION_CLASS
 from .regex import C_RE_PROPERTY
 from .regex import C_RE_SECTION_CONST, C_RE_DEF_CONST
 from .regex import C_RE_SECTION_RESOURCE, C_RE_DEF_RESOURCE
-
+from .regex import C_RE_SECTION
 
 class cGroupeResultat():
     """Ensemble des resultats d'une analyse"""
@@ -86,9 +86,6 @@ class ExceptionAnalyseurObligatoire(Exception):
         self.analyseur = analyseur
 
 
-class ExceptionAnalyseurStop(Exception):
-    pass
-
 class cAnalyseur:
     """Analyseur simple"""
     def __init__(self, p_re, p_type, p_fils=None, p_obligatoire=True):
@@ -127,29 +124,6 @@ class cAnalyseur:
         return '[re <%s> type<%s> fils<%s> obl<%s>]' % (self.re, self.type, str(self.fils), str(self.obligatoire))
 
 
-class cAnalyseurStop:
-    """Analyseur pour sortir d'une iteration"""
-    def __init__(self, p_re):
-        self.re = p_re
-
-    def analyse(self, data, position=0):
-        logger.debug('debut analyse stop')
-        resultat = None
-        pos_espace = data._match_regex(r'\s+', position, -1)
-        if pos_espace is not None:
-            position = pos_espace[1]
-        pos = data._match_regex(self.re, position, -1)
-        if pos is not None:
-            logger.debug('trouve fin')
-            raise ExceptionAnalyseurStop()
-        return None, position
-
-    def __repr__(self):
-        return 'cAnalyseurStop'
-
-    def __str__(self):
-        return '[STOP re <%s>]' % self.re
-
 class cAnalyseurZone:
     """Analyseur de zone, analyse d'un point de départ jusqu'à une regex, permet de sauter des zones
     bien délimitées"""
@@ -178,8 +152,13 @@ class cAnalyseurZone:
 
 class cRepeteurAnalyseur:
     """Repete n fois un analyseur"""
-    def __init__(self, p_analyseur):
+    def __init__(self, p_analyseur, p_analyseur_stop=None):
         self.analyseur = p_analyseur
+        self.analyseur_stop = p_analyseur_stop
+        # un analyseur est obligatoirement non obligatoire
+        if (self.analyseur_stop is not None) and \
+           self.analyseur_stop.obligatoire:
+            raise Exception('un analyseur stop ne doit pas etre obligatoire')
 
     def analyse(self, data, position=0):
         logger.debug('cRepeteurAnalyseur : debut analyse')
@@ -188,10 +167,14 @@ class cRepeteurAnalyseur:
         while elem_resultat is not None:
             position = elem_position
             resultat.ajouter(elem_resultat)
+            if (self.analyseur_stop is not None) and \
+               (self.analyseur_stop.analyse(data, position)[0] is not None):
+                elem_resultat = None
+                break
             try:
                 elem_resultat, elem_position = self.analyseur.analyse(data, position)
             # dans un repeteur on doit avoir au moins un analyseur obligatoire de reconnu
-            except (ExceptionAnalyseurStop, ExceptionAnalyseurObligatoire):
+            except ExceptionAnalyseurObligatoire:
                 elem_resultat = None
                 elem_position = position
         if elem_resultat is not None:
@@ -246,17 +229,13 @@ class cGroupeAnalyseur():
             return None, position
 
 analyseur_section_const = cRepeteurAnalyseur(
-        cGroupeAnalyseur((
-            cAnalyseurStop(C_RE_SECTION_RESOURCE),
             cAnalyseur(C_RE_DEF_CONST, 'const'),
-        ))
-    )
+            p_analyseur_stop=cAnalyseur(C_RE_SECTION, 'section', p_obligatoire=False)
+        )
 
 analyseur_section_resource = cRepeteurAnalyseur(
-        cGroupeAnalyseur((
-            cAnalyseurStop(C_RE_IMPLEMENTATION),
             cAnalyseur(C_RE_DEF_RESOURCE, 'resource'),
-        ))
+            p_analyseur_stop=cAnalyseur(C_RE_SECTION, 'section', p_obligatoire=False)
     )
 
 def analyseur_type_function(func_analyseur_type):
