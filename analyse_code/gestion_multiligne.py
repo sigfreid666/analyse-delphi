@@ -12,6 +12,7 @@ class gestion_multiligne:
         # en mode modificatio on garde les lignes pour pouvoir les modifier.
         if mode_modification:
             self.lignes = lignes
+        mode_saut = False
         for ligne in lignes:
             ligne_mod = re.sub(r'\(\*.*\*\)', ' ', ligne)
             ligne_mod = re.sub(r'\{.*?\}', ' ', ligne_mod)
@@ -19,6 +20,16 @@ class gestion_multiligne:
             ligne_mod = ligne_mod.replace('{$ENDREGION}', ' ')
             pos_commentaire = ligne_mod.find('//')
             ligne_mod = ligne_mod[0:pos_commentaire] + ' '
+            m_re = re.search(r'\*\)(?!\')', ligne_mod)
+            if m_re is not None:
+                mode_saut = False
+                ligne_mod = ligne_mod[m_re.end(0):]
+            if mode_saut:
+                continue
+            m_re = re.search(r'(?<!\')\(\*', ligne_mod)
+            if m_re is not None:
+                mode_saut = True
+                ligne_mod = ligne_mod[0:m_re.start(0)]
             self.data += ligne_mod
             self.index.append(index_courant)
             self.index_reel.append(index_courant_reel)
