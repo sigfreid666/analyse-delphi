@@ -30,12 +30,20 @@ def test_ml_parenthese():
               'deuxieme ligne { re commentaire }\n']
     gl = gestion_multiligne(lignes)
 
-    assert gl.data == 'premiere ligne  suite deuxieme ligne   '
+    assert gl.data == 'premiere ligne suite deuxieme ligne  '
 
 
-def test_ml_multiligne():
+def test_ml_multiligne1():
     lignes = ['premiere ligne (* commentaire suite\n',
               'deuxieme ligne *)et la fin\n']
     gl = gestion_multiligne(lignes)
 
     assert gl.data == 'premiere ligne et la fin '
+
+
+def test_ml_multiligne2():
+    lignes = ['premiere ligne { commentaire suite\n',
+              'deuxieme ligne }et la fin\n']
+    gl = gestion_multiligne(lignes)
+
+    assert gl.data
