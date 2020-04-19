@@ -32,7 +32,7 @@ class cEnsembleUnite:
         def parcour(p_repertoire):
             for x in Path(p_repertoire).iterdir():
                 if (not x.is_dir()) and x.match('*.pas'):
-                    self.unites[str(x)] = unite(str(x))
+                    self.unites[x.stem.upper()] = unite(str(x))
                     logger.debug('trouver : %s dans %s', x.name, p_repertoire)
                 elif x.is_dir() and (not x.name.startswith('.')):
                     parcour(x)
