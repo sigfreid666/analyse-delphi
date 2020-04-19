@@ -58,7 +58,7 @@ class gestion_multiligne:
             if not mode_commentaire:
                 ligne_finale += ligne_mod[position:]
 
-            self.data += ligne_finale
+            self.data += ligne_finale.replace('\r', ' ')
             self.index.append(index_courant)
             self.index_reel.append(index_courant_reel)
             index_courant += len(ligne_mod)
