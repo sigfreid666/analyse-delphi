@@ -8,7 +8,7 @@ PROGRAM main1;
 
   USES
     unit1                         IN 'C:\Projets\Produits\DEV\unit1.pas',
-    unit2                         IN 'C:\Projets\Produits\DEV\unit2.pas';
+    unit4                         IN 'C:\Projets\Produits\DEV\unit4_.pas';
 
 {$R *.res}
 {$R C:\Projets\Produits\DEV\Scolys\_Delphi\IconeBaseEdt.res}
