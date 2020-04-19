@@ -1,5 +1,6 @@
 import pickle
 import re
+import platform
 from pathlib import Path
 
 from .log import logger
@@ -7,12 +8,12 @@ from .unite import unite
 
 
 class cEnsembleUnite:
-    def __init__(self, repertoire, cache_unite=True, repertoire_remplacement='', change_slash=False):
+    def __init__(self, repertoire, cache_unite=True, repertoire_remplacement=''):
         self.repertoire = repertoire
         self.nom_dpr = ''
         self.nom_fichier_dpr = ''
         self.repertoire_remplacement = repertoire_remplacement
-        self.change_slash = change_slash
+        self.change_slash = platform.system() != 'Windows'
         self.unites = {}
         self.unites_non_utilise = []
         self.unites_non_trouve = []
@@ -65,6 +66,7 @@ class cEnsembleUnite:
             if uses_pos is not None:
                 logger.debug('Tag USES trouve pos <%d>', uses_pos.start(0))
                 unit_trouve = 0
+                nom_fichier = ''
                 for unit_pos in re.finditer(r'([\.\w]+)\s+IN\s+\'([\\\/\:\.\w]+)\'\s*(?:\{.*?\})?\s*(?:,|;)', data[uses_pos.end(0):], re.IGNORECASE):
                     try:
                         if recharger or (unit_pos.groups()[0].upper() not in self.unites):
@@ -80,7 +82,7 @@ class cEnsembleUnite:
                         unit_trouve += 1
                     except FileNotFoundError:
                         self.unites_non_trouve.append((unit_pos.groups()[0], unit_pos.groups()[1]))
-                        logger.error('le fichier <%s> n''existe pas', unit_pos.groups()[0])
+                        logger.error('le fichier <%s> n''existe pas (%s)', unit_pos.groups()[1], nom_fichier)
                     except Exception as e:
                         logger.error('impossibe d''analyser l''unite <%s>', unit_pos.groups()[0])
                         raise e
