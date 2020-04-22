@@ -1,5 +1,8 @@
 import codecs
+import json
 from pathlib import Path
+from hashlib import sha256
+
 from .log import logger
 from .data import cData
 from .uses import cUses
@@ -20,6 +23,7 @@ class unite():
             self.data = cData(lignes)
             self.gestion_ml = self.data.ogestionmultiligne
 
+        self.hash = sha256(self.data.data.encode('utf-8')).hexdigest()
         logger.info('Analyse du fichier <%s>', str(self.nom_fichier))
         self.analyse = analyseur_unit.analyse(self.data)[0]
         self.nom = self.analyse.chercher(p_type='unit')  # self.pos_unite[3][0]
@@ -60,6 +64,19 @@ class unite():
                                            p_type=cType.T_CONST),
                                      self.data.genere_fils(element.debut, element.fin))
         logger.info('fin creation unite : %s', str(self))
+
+    def json(self):
+        return {
+            'id': self.hash,
+            'nom': self.nom,
+            'nom_fichier': str(self.nom_fichier),
+            'types': self.liste_type_interface.json(),            
+            'symbol': self.symbols.json(),
+        }
+    
+    def export_json_tofile(self, nomfichier):
+        with open(nomfichier, 'w') as f:
+            json.dump(self.json(), f, indent=4)
 
     def __str__(self):
         chaine = 'UNITE <%s> <%s> utilise par <%d>\n' % (self.nom, str(self.nom_fichier), len(self.liste_unite))

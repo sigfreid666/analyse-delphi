@@ -1,3 +1,4 @@
+from hashlib import sha256
 from .log import logger
 
 
@@ -14,6 +15,13 @@ class cType:
         self.definition = p_definition
         self.data = p_oData
         self.type = p_type
+
+    def json(self):
+        return {
+            'id': sha256(self.data.data.encode('utf-8')).hexdigest() if self.data is not None else self.nom,
+            'nom': self.nom,
+            'type': self.type,
+        }
 
     def __str__(self):
         return 'TYPE <%s> <%d>' % (self.nom, self.type)
@@ -37,6 +45,9 @@ class cEnsembleType:
                 return [x for x in self.types[nom_type] if x.type == cat_type]
         else:
             return []
+
+    def json(self):
+        return [y.json() for x in self.types for y in self.types[x]]
 
     def __str__(self):
         resultat = 'Ensemble type\n'
@@ -66,6 +77,14 @@ class cTableSymbol:
                 return [x for x in self.symbol[nom_symbol] if x[0].nom == cat_type]
         else:
             return []
+
+    def json(self):
+        return [
+            {
+                'nom': x,
+                'type': y[0].json()
+            } for x in self.symbol for y in self.symbol[x]
+        ]
 
     def __str__(self):
         resultat = 'Ensemble symbol <%d>\n' % len(self.symbol)
@@ -183,6 +202,13 @@ class cClasse(cType):
                                            p_type=cType.T_CONST),
                                      self.data.genere_fils(element.debut, element.fin))
         self.type_local = genere_ensemble_type_par_groupe_resultat(self.analyse, self.data)
+
+    def json(self):
+        js = super().json()
+        js['derivee'] = self.derivee if self.derivee is not None else ''
+        js['types'] = self.type_local.json()
+        js['symbol'] = self.symbols.json()
+        return js
 
     def __repr__(self):
         return '[CLA <%s> -> <%s>]' % (self.nom, self.derivee)

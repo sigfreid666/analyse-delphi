@@ -1,6 +1,8 @@
 import pickle
 import re
 import platform
+import json
+from hashlib import sha256
 from pathlib import Path
 
 from .log import logger
@@ -14,12 +16,24 @@ class cEnsembleUnite:
         self.unites_non_utilise = []
         self.unites_non_trouve = []
         self.unites_uses_non_trouve = []
+        self.hash = sha256(repertoire.encode('utf-8')).hexdigest()
 
         self.nom_fichier = Path(repertoire) / Path('unite.pickle')
         if cache_unite:
             if self.nom_fichier.exists():
                 with open(str(self.nom_fichier), 'rb') as f:
                     self.unites = pickle.load(f)
+
+    def json(self):
+        return {
+            'id': self.hash,
+            'repertoire': str(self.repertoire),
+            'unites': [ self.unites[x].json() for x in self.unites ]
+        }
+
+    def export_json_tofile(self, nomfichier):
+        with open(nomfichier, 'w') as f:
+            json.dump(self.json(), f, indent=4)
 
     def save(self):
         logger.info('sauvegarde : <%d> unite(s)', len(self.unites))
@@ -113,6 +127,8 @@ class cEnsembleUniteDpr(cEnsembleUnite):
         with open(str(self.nom_fichier_dpr), 'r') as f:
             logger.info('Ouverture du fichier dpr <%s>', self.nom_fichier_dpr)
             data = f.read()
+            # on profite pour mettre a jour le hash
+            self.hash = sha256(data.encode('utf-8')).hexdigest()
             # on cherche le nom du programme
             program_pos = re.search(r'PROGRAM\s+(\w+?);', data, re.IGNORECASE)
             if program_pos is not None:
