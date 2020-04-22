@@ -61,7 +61,7 @@ class gestion_multiligne:
             self.data += ligne_finale.replace('\r', ' ')
             self.index.append(index_courant)
             self.index_reel.append(index_courant_reel)
-            index_courant += len(ligne_mod)
+            index_courant += len(ligne_finale)
             index_courant_reel += len(ligne)
 
     def num_ligne(self, indice):
