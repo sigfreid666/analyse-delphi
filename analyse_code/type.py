@@ -103,6 +103,10 @@ class cSetOf(cType):
         self.analyse = p_oResultatAnalyse
         self.membre = [x.strip(' ()') for x in self.analyse.reconnu[1].split(',')]
 
+    def json():
+        js = super().json()
+        js['membre'] = [x for x in self.membre]
+
     def __repr__(self):
         return '[SETOF <%s> element]' % len(self.membre)
         
