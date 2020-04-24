@@ -22,6 +22,10 @@ from .regex import C_RE_SECTION_CONST, C_RE_DEF_CONST
 from .regex import C_RE_SECTION_RESOURCE, C_RE_DEF_RESOURCE
 from .regex import C_RE_SECTION
 from .regex import C_RE_GUID
+from .regex import C_RE_CASE_TYPE
+from .regex import C_RE_DECL_TYPE_CLASS_OF
+from .regex import C_RE_VAR_RECORD, C_RE_VAR_RECORD_2
+from .regex import C_RE_SECTION_VAR
 
 class cGroupeResultat():
     """Ensemble des resultats d'une analyse"""
@@ -40,9 +44,20 @@ class cGroupeResultat():
 
         def __repr__(self):
             return '[RES<%s>]' % self.type
+        
+        def json(self):
+            return {
+                'type': self.type,
+                'num_ligne': self.num_ligne,
+                'reconnu': self.reconnu,
+                'fils': self.fils.json() if self.fils is not None else []
+            }
 
     def __init__(self):
         self.resultats = []
+
+    def json(self):
+        return [x.json() for x in self.resultats]
 
     def __repr__(self):
         return '[GRPRES<%d><%s>]' % (len(self.resultats), str.join(',', [str(x) for x in self.resultats]))
@@ -193,19 +208,26 @@ class cListeAnalyseur:
     def __init__(self, p_analyseurs):
         self.analyseurs = p_analyseurs
 
-    def analyse(self, data, position=0):
+    def analyse(self, data, position=0, debug=False):
         logger.debug('cListeAnalyseur : debut analyse')
         resultat = cGroupeResultat()
-        for analyseur in self.analyseurs:
-            elem_resultat, elem_position = analyseur.analyse(data, position)
-            if elem_resultat is not None:
-                resultat.ajouter(elem_resultat)
-                position = elem_position
-        logger.debug('cListeAnalyseur : fin analyse')
-        if len(resultat.resultats) == 0:
-            return None, position
-        else:
-            return resultat, position
+        try:
+            for analyseur in self.analyseurs:
+                elem_resultat, elem_position = analyseur.analyse(data, position)
+                if elem_resultat is not None:
+                    resultat.ajouter(elem_resultat)
+                    position = elem_position
+            logger.debug('cListeAnalyseur : fin analyse')
+            if len(resultat.resultats) == 0:
+                return None, position
+            else:
+                return resultat, position
+        except ExceptionAnalyseurObligatoire:
+            if debug:
+                import json
+                with open('dump_resultat.json', 'w') as f:
+                    json.dump(resultat.json(), f, indent=4)
+            raise
 
 
 class cGroupeAnalyseur():
@@ -243,12 +265,14 @@ def analyseur_type_function(func_analyseur_type):
     return cRepeteurAnalyseur(
         cGroupeAnalyseur((
             cAnalyseur(C_RE_TYPES, 'section_type', p_fils=func_analyseur_type),
+            cAnalyseur(C_RE_SECTION_VAR, 'section_var', p_fils=cRepeteurAnalyseur((cAnalyseur(C_RE_VAR, 'var_global')), p_analyseur_stop=cAnalyseur(C_RE_SECTION, 'section', p_obligatoire=False))),
             cAnalyseur(C_RE_FUNCTION_DECL, 'function'),
             cAnalyseur(C_RE_FUNCTION_DECL_S, 'function'),
             cAnalyseur(C_RE_PROCEDURE_DECL, 'function'),
             cAnalyseur(C_RE_PROCEDURE_DECL_S, 'function'),
             cAnalyseur(C_RE_SECTION_CONST, 'section_const', p_fils=analyseur_section_const),
-            cAnalyseur(C_RE_SECTION_RESOURCE, 'section_resource', p_fils=analyseur_section_resource)),
+            cAnalyseur(C_RE_SECTION_RESOURCE, 'section_resource', p_fils=analyseur_section_resource),
+            cAnalyseur(C_RE_CASE_TYPE, 'case')),
             p_obligatoire=False))
 
 
@@ -256,12 +280,19 @@ def analyseur_types():
     return \
         cRepeteurAnalyseur(
             cGroupeAnalyseur((
+                cAnalyseur(C_RE_DECL_TYPE_CLASS_OF, 'class_of'),
                 cAnalyseur(C_RE_CLASS_DEB, 'class', p_fils=analyseur_class()),
                 cAnalyseur(C_RE_TYPE_PROC_FUNC, 'type_function'),
                 cAnalyseur(C_RE_DECL_TYPE_SETOF, 'type_setof'),
                 cAnalyseur(C_RE_DECL_TYPE, 'type_autre')
             ), p_obligatoire=False)
         )
+
+
+analyseur_type_or_record = cGroupeAnalyseur((
+    cAnalyseur(C_RE_CLASS_DEB, 'class', p_fils=analyseur_type_function(analyseur_types)),
+    cAnalyseur(C_RE_VAR_RECORD_2, 'type')
+))
 
 
 def analyseur_class():
@@ -273,6 +304,7 @@ def analyseur_class():
                 cGroupeAnalyseur((
                     analyseur_type_function(analyseur_types),
                     cAnalyseur(C_RE_PROPERTY, 'property'),
+                    cAnalyseur(C_RE_VAR_RECORD, 'menber'),
                     cAnalyseur(C_RE_VAR, 'menber')
                 ), p_obligatoire=False)
             ))

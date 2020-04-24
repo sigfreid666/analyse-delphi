@@ -25,7 +25,7 @@ class unite():
 
         self.hash = sha256(self.data.data.encode('utf-8')).hexdigest()
         logger.info('Analyse du fichier <%s>', str(self.nom_fichier))
-        self.analyse = analyseur_unit.analyse(self.data)[0]
+        self.analyse = analyseur_unit.analyse(self.data, debug=True)[0]
         self.nom = self.analyse.chercher(p_type='unit')  # self.pos_unite[3][0]
         if len(self.nom) > 0:
             self.nom = self.nom[0].reconnu[0]
