@@ -5,11 +5,20 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python : Fichier actuel",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Python: Module Last Failed",
             "type": "python",
             "request": "launch",
             "module": "pytest",
-            "args": ["--lf"]
+            "args": [
+                "--lf"
+            ]
         },
         {
             "name": "Python: Module",

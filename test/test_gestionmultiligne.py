@@ -41,9 +41,12 @@ def test_ml_multiligne1():
     assert gl.data == 'premiere ligne et la fin '
 
 
-def test_ml_multiligne2():
-    lignes = ['premiere ligne { commentaire suite\n',
-              'deuxieme ligne }et la fin\n']
+def test_ml_else():
+    lignes = ['premiere ligne\n',
+              '{$ELSE}\n',  
+              'ligne qui doit etre supprime\n',
+              '{$ENDIF}\n',
+              'derniere ligne\n']
     gl = gestion_multiligne(lignes)
 
-    assert gl.data
+    assert gl.data == 'premiere ligne  derniere ligne '

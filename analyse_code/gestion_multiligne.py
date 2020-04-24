@@ -16,6 +16,7 @@ class gestion_multiligne:
         if mode_modification:
             self.lignes = lignes
         mode_commentaire = False # pas de commentaire en cours
+        mode_else = False
         for ligne in lignes:
             ligne_mod = ligne.replace('{$REGION}', ' ')
             ligne_mod = ligne_mod.replace('{$ENDREGION}', ' ')
@@ -39,6 +40,14 @@ class gestion_multiligne:
                         mode_commentaire = True
                         ligne_finale += ligne_mod[position:m_re.start(0)]
                         position += m_re.end(0)
+                        # on gère le {$ELSE}
+                        if ligne_mod[m_re.end(0):].find('$ELSE') == 0:
+                            mode_else = True
+                            logger.debug('mode else active ligne %d', len(self.index) + 1)
+                        # on gère le {$ENDIF}
+                        if ligne_mod[m_re.end(0):].find('$ENDIF') == 0:
+                            mode_else = False
+                            logger.debug('fin mode else ligne %d', len(self.index) + 1)
                     # else:
                     #     ligne_finale += ligne_mod[position:]
                 # recherche de la fin d'un commentaire
@@ -57,6 +66,9 @@ class gestion_multiligne:
             # ce qu'il reste
             if not mode_commentaire:
                 ligne_finale += ligne_mod[position:]
+
+            if mode_else:
+                ligne_finale = ''
 
             self.data += ligne_finale.replace('\r', ' ')
             self.index.append(index_courant)

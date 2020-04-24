@@ -210,6 +210,7 @@ class cListeAnalyseur:
 
     def analyse(self, data, position=0, debug=False):
         logger.debug('cListeAnalyseur : debut analyse')
+        first_position = position
         resultat = cGroupeResultat()
         try:
             for analyseur in self.analyseurs:
@@ -221,6 +222,10 @@ class cListeAnalyseur:
             if len(resultat.resultats) == 0:
                 return None, position
             else:
+                if debug and (first_position == 0):
+                    import json
+                    with open('dump_resultat.json', 'w') as f:
+                        json.dump(resultat.json(), f, indent=4)
                 return resultat, position
         except ExceptionAnalyseurObligatoire:
             if debug:
