@@ -14,10 +14,10 @@ C_RE_RECORD = r'(\w+)[ ]*=[ ]*RECORD[ ]*.*END\s*;'
 C_RE_TYPE_PROC_FUNC = r'(\w+)[ ]*=[ ]*(?:REFERENCE)?[ ]*(?:TO)?[ ]*((?:PROCEDURE|FUNCTION)[ ]*\(.*?\)[ ]*(?:OF)?[ ]*(?:OBJECT)?[ ]*);'
 C_RE_PARAM = r'\s*(CONST|VAR|OUT)?\s+([^:]+)\s*:\s*([\w<> ]+)\s*;?'
 C_RE_VERB_END_FUNC = r'(?:[ ]*(OVERLOAD|OVERRIDE|VIRTUAL|ABSTRACT|STATIC|INLINE|stdcall|deprecated(?:\s+\'[^\']*?\')?)[ ]*;)*'
-C_RE_FUNCTION_DECL = r'(?:CLASS\s+)?(FUNCTION|OPERATOR)[ ]+([^ \(]+)[ ]*\(([^\)]*)\)[ ]*:[ ]*([^;]*);' + C_RE_VERB_END_FUNC
-C_RE_FUNCTION_IMPL = r'(?:CLASS\s+)?(FUNCTION|OPERATOR)[ ]+(%s)[ ]*\(([^\(\)]*)\)[ ]*:[ ]*([^;]*);' + C_RE_VERB_END_FUNC
-C_RE_FUNCTION_DECL_S = r'(?:CLASS\s+)?(FUNCTION|OPERATOR)[ ]+([^ \(]+)[ ]*[ ]*:[ ]*([^;]*);' + C_RE_VERB_END_FUNC
-C_RE_FUNCTION_IMPL_S = r'(?:CLASS\s+)?(FUNCTION|OPERATOR)[ ]+(%s)[ ]*[ ]*:[ ]*([^;]*);' + C_RE_VERB_END_FUNC
+C_RE_FUNCTION_DECL = r'(?:CLASS\s+)?(?:FUNCTION|OPERATOR)[ ]+([^ \(]+)[ ]*\(([^\)]*)\)[ ]*:[ ]*([^;]*);' + C_RE_VERB_END_FUNC
+C_RE_FUNCTION_IMPL = r'(?:CLASS\s+)?(?:FUNCTION|OPERATOR)[ ]+(%s)[ ]*\(([^\(\)]*)\)[ ]*:[ ]*([^;]*);' + C_RE_VERB_END_FUNC
+C_RE_FUNCTION_DECL_S = r'(?:CLASS\s+)?(?:FUNCTION|OPERATOR)[ ]+([^ \(]+)[ ]*[ ]*:[ ]*([^;]*);' + C_RE_VERB_END_FUNC
+C_RE_FUNCTION_IMPL_S = r'(?:CLASS\s+)?(?:FUNCTION|OPERATOR)[ ]+(%s)[ ]*[ ]*:[ ]*([^;]*);' + C_RE_VERB_END_FUNC
 C_RE_PROCEDURE_DECL = r'(?:CLASS\s+)?(?:PROCEDURE|CONSTRUCTOR|DESTRUCTOR)[ ]+([^ \(]+)[ ]*\(([^\)]*)\)[ ]*;' + C_RE_VERB_END_FUNC
 C_RE_PROCEDURE_IMPL = r'(?:CLASS\s+)?(?:PROCEDURE|CONSTRUCTOR|DESTRUCTOR)[ ]+(%s)[ ]*\(([^\)]*)\)[ ]*;' + C_RE_VERB_END_FUNC
 C_RE_PROCEDURE_DECL_S = r'(?:CLASS\s+)?(?:PROCEDURE|CONSTRUCTOR|DESTRUCTOR)[ ]+([^ \(]+)[ ]*;' + C_RE_VERB_END_FUNC
