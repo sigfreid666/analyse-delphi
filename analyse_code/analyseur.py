@@ -274,6 +274,7 @@ class cSelecAnalyseur(cAnalyseur):
             for nom in self.kwargs:
                 if nom == super_resultat.reconnu[0].lower():
                     logger.debug('cSelecAnalyseur : detection de <%s>', nom)
+                    self.kwargs[nom].obligatoire = False
                     return self.kwargs[nom].analyse(data, position)
         if self.obligatoire:
             raise Exception('Pas de selection possiblie')
@@ -291,18 +292,26 @@ analyseur_section_resource = cRepeteurAnalyseur(
             p_analyseur_stop=cAnalyseur(C_RE_SECTION, 'section', p_obligatoire=False)
     )
 
+analyseur_group_function = cGroupeAnalyseur((
+        cAnalyseur(C_RE_FUNCTION_DECL, 'function'),
+        cAnalyseur(C_RE_FUNCTION_DECL_S, 'function'),
+    ))
+
+analyseur_group_procedure = cGroupeAnalyseur((
+        cAnalyseur(C_RE_PROCEDURE_DECL, 'function'),
+        cAnalyseur(C_RE_PROCEDURE_DECL_S, 'function'),
+    ))
+
 def analyseur_type_function(func_analyseur_type):
     return cRepeteurAnalyseur(
         cGroupeAnalyseur((
             cAnalyseur(C_RE_TYPES, 'section_type', p_fils=func_analyseur_type),
             cAnalyseur(C_RE_SECTION_VAR, 'section_var', p_fils=cRepeteurAnalyseur((cAnalyseur(C_RE_VAR, 'var_global')), p_analyseur_stop=cAnalyseur(C_RE_SECTION, 'section', p_obligatoire=False))),
-            cSelecAnalyseur(C_RE_VERB_FUNCTION, p_obligatoire=False,
-                            function=cAnalyseur(C_RE_FUNCTION_DECL, 'function'),
-                            procedure=cAnalyseur(C_RE_PROCEDURE_DECL, 'function'),
-                            constructor=cAnalyseur(C_RE_PROCEDURE_DECL, 'function'),
-                            destructor=cAnalyseur(C_RE_PROCEDURE_DECL, 'function')),
-            cAnalyseur(C_RE_FUNCTION_DECL_S, 'function'),
-            cAnalyseur(C_RE_PROCEDURE_DECL_S, 'function'),
+            cSelecAnalyseur(C_RE_VERB_FUNCTION,
+                            function=analyseur_group_function,
+                            procedure=analyseur_group_procedure,
+                            constructor=analyseur_group_procedure,
+                            destructor=analyseur_group_procedure),
             cAnalyseur(C_RE_SECTION_CONST, 'section_const', p_fils=analyseur_section_const),
             cAnalyseur(C_RE_SECTION_RESOURCE, 'section_resource', p_fils=analyseur_section_resource),
             cAnalyseur(C_RE_CASE_TYPE, 'case')),
