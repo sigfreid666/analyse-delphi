@@ -36,3 +36,4 @@ C_RE_SECTION = r'(IMPLEMENTATION|TYPE|CONST|RESOURCESTRING|PROCEDURE|FUNCTION)\s
 C_RE_GUID = r'\[\s*\'[^\']*\'\s*\]'
 C_RE_CASE_TYPE = r'case\s+\w+\s+of(\s+\w+\:\s*\([^\)]*\);)*'
 C_RE_SECTION_VAR = r'VAR\s'
+C_RE_VERB_FUNCTION = r'(function|procedure|constructor|destructor)'

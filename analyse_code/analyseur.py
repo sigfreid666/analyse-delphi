@@ -26,6 +26,8 @@ from .regex import C_RE_CASE_TYPE
 from .regex import C_RE_DECL_TYPE_CLASS_OF
 from .regex import C_RE_VAR_RECORD, C_RE_VAR_RECORD_2
 from .regex import C_RE_SECTION_VAR
+from .regex import C_RE_VERB_FUNCTION
+
 
 class cGroupeResultat():
     """Ensemble des resultats d'une analyse"""
@@ -37,6 +39,7 @@ class cGroupeResultat():
             self.fin = p_position[1]
             self.num_ligne = p_position[2]
             self.reconnu = p_position[3]
+            self.reconnu_dict = p_position[4]
             if p_fils is not None:
                 self.fils = cGroupeResultat().ajouter(p_fils)
             else:
@@ -50,6 +53,7 @@ class cGroupeResultat():
                 'type': self.type,
                 'num_ligne': self.num_ligne,
                 'reconnu': self.reconnu,
+                'reconnu_dict': self.reconnu_dict,
                 'fils': self.fils.json() if self.fils is not None else []
             }
 
@@ -256,6 +260,27 @@ class cGroupeAnalyseur():
             logger.debug('cGroupeAnalyseur : fin analyse')
             return None, position
 
+
+class cSelecAnalyseur(cAnalyseur):
+    """Analyseur permet d'aiguiller sans consommer de donnees"""
+    def __init__(self, p_re, p_obligatoire=True, **kwargs):
+        super().__init__(p_re, 'selec', p_obligatoire=p_obligatoire)
+        self.kwargs = kwargs
+
+    def analyse(self, data, position=0):
+        logger.debug('cSelecAnalyseur : debut analyse')
+        super_resultat, super_position = super().analyse(data, position)
+        if (super_resultat is not None):
+            for nom in self.kwargs:
+                if nom == super_resultat.reconnu[0].lower():
+                    logger.debug('cSelecAnalyseur : detection de <%s>', nom)
+                    return self.kwargs[nom].analyse(data, position)
+        if self.obligatoire:
+            raise Exception('Pas de selection possiblie')
+        logger.debug('cSelecAnalyseur : rien trouve')
+        return None, position
+
+
 analyseur_section_const = cRepeteurAnalyseur(
             cAnalyseur(C_RE_DEF_CONST, 'const'),
             p_analyseur_stop=cAnalyseur(C_RE_SECTION, 'section', p_obligatoire=False)
@@ -271,9 +296,12 @@ def analyseur_type_function(func_analyseur_type):
         cGroupeAnalyseur((
             cAnalyseur(C_RE_TYPES, 'section_type', p_fils=func_analyseur_type),
             cAnalyseur(C_RE_SECTION_VAR, 'section_var', p_fils=cRepeteurAnalyseur((cAnalyseur(C_RE_VAR, 'var_global')), p_analyseur_stop=cAnalyseur(C_RE_SECTION, 'section', p_obligatoire=False))),
-            cAnalyseur(C_RE_FUNCTION_DECL, 'function'),
+            cSelecAnalyseur(C_RE_VERB_FUNCTION, p_obligatoire=False,
+                            function=cAnalyseur(C_RE_FUNCTION_DECL, 'function'),
+                            procedure=cAnalyseur(C_RE_PROCEDURE_DECL, 'function'),
+                            constructor=cAnalyseur(C_RE_PROCEDURE_DECL, 'function'),
+                            destructor=cAnalyseur(C_RE_PROCEDURE_DECL, 'function')),
             cAnalyseur(C_RE_FUNCTION_DECL_S, 'function'),
-            cAnalyseur(C_RE_PROCEDURE_DECL, 'function'),
             cAnalyseur(C_RE_PROCEDURE_DECL_S, 'function'),
             cAnalyseur(C_RE_SECTION_CONST, 'section_const', p_fils=analyseur_section_const),
             cAnalyseur(C_RE_SECTION_RESOURCE, 'section_resource', p_fils=analyseur_section_resource),

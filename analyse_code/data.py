@@ -18,7 +18,11 @@ class cData:
         logger.debug('_find_regex : <%d> <%d> <%s>', start, end, self.data[start:start + 50])
         match_obj = re.search(str_regex, self.data[start:end], flags=re.IGNORECASE)
         if match_obj is not None:
-            res = (match_obj.start(0) + start_point, match_obj.end(0) + start_point, self.ogestionmultiligne.num_ligne(match_obj.start(0) + start), match_obj.groups())
+            res = (match_obj.start(0) + start_point,
+                   match_obj.end(0) + start_point,
+                   self.ogestionmultiligne.num_ligne(match_obj.start(0) + start),
+                   match_obj.groups(),
+                   match_obj.groupdict())
             logger.debug('trouve : %s', str(res))
             return res
         logger.debug('pas trouve !!')
@@ -33,7 +37,9 @@ class cData:
         if match_obj is not None:
             res = (match_obj.start(0) + start_point,
                    match_obj.end(0) + start_point,
-                   self.ogestionmultiligne.num_ligne(match_obj.start(0) + start), match_obj.groups())
+                   self.ogestionmultiligne.num_ligne(match_obj.start(0) + start),
+                   match_obj.groups(),
+                   match_obj.groupdict())
             logger.debug('trouve : %s', str(res))
             return res
         logger.debug('pas trouve !!')
